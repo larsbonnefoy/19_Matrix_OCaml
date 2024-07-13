@@ -1,19 +1,13 @@
 module type Field = sig
     type t
-
     val zero : t
-
     val one : t
-
     val neg : t -> t
-
     val add : t -> t -> t
-
     val sub : t -> t -> t
-
     val mul : t -> t -> t
-
     val div : t -> t -> t
+    val to_string : t -> string
 end
 
 module type S = sig
@@ -26,6 +20,7 @@ module type S = sig
     val init : int -> elt -> 'a t
 
     val empty : 'a t
+    val display : 'a t -> unit
 end
 
 (* module Make (Ord : OrderedType) : S with type key = Ord.t *)

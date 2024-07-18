@@ -24,6 +24,9 @@ module type S = sig
     (** [is_empty v] is true if v is Empty, false if v is Vector _*)
     val is_empty : 'a t -> bool
 
+    (** [length v] the number of elements contained in v*)
+    val length : 'a t -> int
+
     val display : 'a t -> unit
 
     (** [add v1 v2] is the element wise addition of v1 and v2
@@ -38,7 +41,9 @@ module type S = sig
 
     (** [mul v s] is the the vector v multiplied by the scalar s
         Raises Empty_vector if v is empty*)
-    val mul : 'a t -> elt -> 'a t
+    val scl : 'a t -> elt -> 'a t
+
+    val linear_comb : 'a t array -> elt array -> 'b t
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
     val of_array : elt array -> 'a t

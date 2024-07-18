@@ -1,4 +1,4 @@
 (executable
- (public_name Matrix_OCaml)
+ (public_name main)
  (name main)
  (libraries Linear_Algebra))

@@ -31,14 +31,42 @@ module Make(Element : Field) = struct
 
     type 'a t = Empty | Vector of elt array
 
+    (* Monad Operations*)
+
+    (** [return a] encapsulates elt array into Vector Type*)
+    let return (a : elt array) = 
+        if Array.length a = 0 then Empty
+        else Vector a
+
+    (** [bind v op] applies op to the underlying type of v*)
+    let bind (v : 'a t) (op : elt array -> 'b t) = 
+        match v with
+        | Empty -> Empty
+        | Vector a -> op a
+
+    let ( >>= ) = bind
+    (* -------------------------- *)
+
+    let ( * ) = Element.mul
+    let ( - ) = Element.sub
+    let ( + ) = Element.add
+
+    (* Redfine standard Array operations as operations on Vector*)
+    let map f (v : 'a t) : 'a t = 
+        v >>= fun a -> return (Array.map f a)
+
+    let map2 f v1 v2 = 
+        v1 >>= fun a1 -> 
+        v2 >>= fun a2 ->
+        return (Array.map2 f a1 a2)
+    (* -------------------------- *)
+
     let init (size : int) (value : elt) = 
         if size < 0 then failwith "Negative array size"
         else if size = 0 then Empty
         else Vector(Array.make size value)
 
     let empty = Empty
-
-    exception Empty_vector 
 
     let is_empty = function
         | Empty -> true
@@ -51,35 +79,20 @@ module Make(Element : Field) = struct
             Array.iter (fun a -> Printf.printf "%s " (Element.to_string a)) v; 
             print_endline "]"
 
-    let value_helper = function
-        | Empty -> raise Empty_vector
-        | Vector v -> v
-
     (** [add v1 v2] is the element wise addition of v1 and v2
-        Raises Invalid_argument if len v1 <> len v2
-        Raises Empty_vector if v1 or v2 is empty*)
-    let add v1 v2 = 
-            let a = value_helper v1 in 
-            let b = value_helper v2 in 
-            Vector(Array.map2 Element.add a b)
+        Raises Invalid_argument if len v1 <> len v2 *)
+    let add v1 v2 = map2 ( + ) v1 v2
 
-    let sub v1 v2 = 
-            let a = value_helper v1 in 
-            let b = value_helper v2 in 
-            Vector(Array.map2 Element.sub a b)
+    let sub v1 v2 = map2 ( - ) v1 v2
 
-    let mul v s = 
-        let a = value_helper v in
-        let mul_by_scalar = Element.mul s in 
-        Vector(Array.map mul_by_scalar a)
+    let mul v s = map ( ( * ) s ) v
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
-    let of_array (arr : elt array) = 
-        if Array.length arr = 0 then Empty 
-        else Vector arr
+    let of_array (arr : elt array) = return arr
 
     (** [of_list lst] is the Vector containing the same elements as lst*)
     let of_list (lst : elt list) = 
         if List.length lst = 0 then empty 
         else Vector(Array.of_list lst)
+
 end

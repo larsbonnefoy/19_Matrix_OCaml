@@ -13,25 +13,25 @@ end
 
 module type S = sig
     type elt 
-    type 'a t
-    val init : int -> elt -> 'a t
-    val empty : 'a t
-    val is_empty : 'a t -> bool
-    val length : 'a t -> int
-    val display : 'a t -> unit
-    val add : 'a t -> 'a t -> 'a t
-    val sub : 'a t -> 'a t -> 'a t
-    val scl : 'a t -> elt -> 'a t
-    val linear_comb : 'a t array -> elt array -> 'b t
-    val of_array : elt array -> 'a t
-    val of_list : elt list -> 'a t
+    type t
+    val init : int -> elt -> t
+    val empty : t
+    val is_empty : t -> bool
+    val length : t -> int
+    val display : t -> unit
+    val add : t -> t -> t
+    val sub : t -> t -> t
+    val scl : t -> elt -> t
+    val linear_comb : t array -> elt array -> t
+    val of_array : elt array -> t
+    val of_list : elt list -> t
 end
 
 module Make(Element : Field) = struct
 
     type elt = Element.t
 
-    type 'a t = Empty | Vector of elt array
+    type t = Empty | Vector of elt array
 
     (* Monad Operations*)
 
@@ -41,7 +41,7 @@ module Make(Element : Field) = struct
         else Vector a
 
     (** [bind v op] applies op to the underlying type of v*)
-    let bind (v : 'a t) (op : elt array -> 'b t) = 
+    let bind (v : t) (op : elt array -> t) = 
         match v with
         | Empty -> Empty
         | Vector a -> op a
@@ -54,7 +54,7 @@ module Make(Element : Field) = struct
     let ( + ) = Element.add
 
     (* Redfine standard Array operations as operations on Vector*)
-    let map f (v : 'a t) : 'a t = 
+    let map f v = 
         v >>= fun a -> return (Array.map f a)
 
     let map2 f v1 v2 = 
@@ -94,7 +94,7 @@ module Make(Element : Field) = struct
 
     let scl v s = map ( ( * ) s ) v
 
-    let linear_comb (v : 'a t array) (c : elt array) = 
+    let linear_comb (v : t array) (c : elt array) = 
         let scaled_array = Array.map2 scl v c in
         let size_vector = length scaled_array.(0) in
         let neutral_vector = init size_vector Element.zero in  

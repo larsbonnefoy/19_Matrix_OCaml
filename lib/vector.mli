@@ -15,41 +15,41 @@ module type S = sig
     type elt 
 
     (** Is of type Vector 'a or Empty*)
-    type 'a t
+    type t
 
-    val init : int -> elt -> 'a t
+    val init : int -> elt -> t
 
-    val empty : 'a t
+    val empty : t
 
     (** [is_empty v] is true if v is Empty, false if v is Vector _*)
-    val is_empty : 'a t -> bool
+    val is_empty : t -> bool
 
     (** [length v] the number of elements contained in v*)
-    val length : 'a t -> int
+    val length : t -> int
 
-    val display : 'a t -> unit
+    val display : t -> unit
 
     (** [add v1 v2] is the element wise addition of v1 and v2
         Raises Invalid_argument if len v1 <> len v2
         Raises Empty_vector if v1 or v2 is empty*)
-    val add : 'a t -> 'a t -> 'a t
+    val add : t -> t -> t
 
     (** [sub v1 v2] is the element wise subtraction of v1 and v2
         Raises Invalid_argument if len v1 <> len v2
         Raises Empty_vector if v1 or v2 is empty*)
-    val sub : 'a t -> 'a t -> 'a t
+    val sub : t -> t -> t
 
     (** [mul v s] is the the vector v multiplied by the scalar s
         Raises Empty_vector if v is empty*)
-    val scl : 'a t -> elt -> 'a t
+    val scl : t -> elt -> t
 
-    val linear_comb : 'a t array -> elt array -> 'b t
+    val linear_comb : t array -> elt array -> t
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
-    val of_array : elt array -> 'a t
+    val of_array : elt array -> t
 
     (** [of_list lst] is the Vector containing the same elements as lst*)
-    val of_list : elt list -> 'a t
+    val of_list : elt list -> t
 end
 
 (* module Make (Ord : OrderedType) : S with type key = Ord.t *)

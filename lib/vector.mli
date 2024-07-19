@@ -34,16 +34,35 @@ module type S = sig
         Raises Empty_vector if v1 or v2 is empty*)
     val add : t -> t -> t
 
+    val add_ip : t -> t -> unit
+
     (** [sub v1 v2] is the element wise subtraction of v1 and v2
         Raises Invalid_argument if len v1 <> len v2
         Raises Empty_vector if v1 or v2 is empty*)
     val sub : t -> t -> t
 
+    val sub_ip : t -> t -> unit
+
     (** [mul v s] is the the vector v multiplied by the scalar s
         Raises Empty_vector if v is empty*)
     val scl : t -> elt -> t
 
+    val scl_ip : t -> elt -> unit
+
     val linear_comb : t array -> elt array -> t
+
+    (** [lerp_e p1 p2 t] is the point on the line between e1 e2 at t distance from e1
+         Example: lerp 0. 1. 0.5 is 0.5
+                 lerp 0. 1. 0 is 0.5
+                 lerp 21. 42. 0.3 is 27.3
+    *)
+    val lerp_p : elt -> elt -> elt -> elt
+
+    (** [lerp v1 v2 t] is the point on the line *)
+    val lerp : t -> t -> elt -> t
+
+    (** [dot v1 v2] is the dot product of v1 with v2*)
+    val dot : t -> t -> t
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
     val of_array : elt array -> t

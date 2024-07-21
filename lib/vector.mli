@@ -67,8 +67,11 @@ module type S = sig
     (** [lerp v1 v2 t] is the point on the line *)
     val lerp : t -> t -> elt -> t
 
-    (** [dot v1 v2] is the dot product of v1 with v2*)
-    val dot : t -> t -> t
+    (* * [dot v1 v2] is the dot product of v1 with v2 *)
+    val dot : t -> t -> elt
+
+    (* * [dot_fma v1 v2] is the dot product of v1 with v2 *)
+    val dot_fma : t -> t -> elt
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
     val of_array : elt array -> t

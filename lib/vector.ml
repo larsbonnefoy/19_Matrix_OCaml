@@ -30,7 +30,8 @@ module type S = sig
     val linear_comb_fma : t array -> elt array -> t
     val lerp_p : elt -> elt -> elt -> elt
     val lerp : t -> t -> elt -> t
-    val dot : t -> t -> t
+    val dot : t -> t -> elt
+    val dot_fma : t -> t -> elt
     val of_array : elt array -> t
     val of_list : elt list -> t
 end
@@ -61,7 +62,7 @@ module Make(Element : Field) = struct
     let ( - ) = Element.sub
     let ( + ) = Element.add
 
-    (** Defined only in Floats, required for other implementation
+    (** Defined only in Float module, required for other implementation
         fma x y z returns x * y + z *)
     let fma = Element.fma
 
@@ -70,23 +71,24 @@ module Make(Element : Field) = struct
         | Empty -> 0
         | Vector s -> (Array.length s)
 
-    let get v pos = 
+    (**[get v pos] is element at index i in v*)
+    let get v i = 
         match v with
         | Empty -> raise (Failure "Empty Vector")
-        | Vector s -> Array.get s pos
+        | Vector s -> Array.get s i
 
     let map f v = 
         v >>= fun a -> return (Array.map f a)
+
+    let map_ip f = function
+        | Empty -> ()
+        | Vector a -> Array.map_inplace f a
 
     (** [map2 f v1 v2] is the new vector v where f has been applied element wise to v1 and v2*)
     let map2 f v1 v2 = 
         v1 >>= fun a1 -> 
         v2 >>= fun a2 ->
         return (Array.map2 f a1 a2)
-
-    let map_ip f = function
-        | Empty -> ()
-        | Vector a -> Array.map_inplace f a
 
     (** [map2_ip f v1 v2] applies f element wise to to v1 and v2 and stores results into v1*)
     let map2_ip f v1 v2 = 
@@ -101,12 +103,26 @@ module Make(Element : Field) = struct
             done
         end
 
+    (** Applies f elementwise to v1 and v2 and stores result in acc 
+        Mutates acc in place
+        acc := f v1 v2 acc*)
+    let map2_acc f v1 v2 acc = 
+        let l1 = length v1 in 
+        let l2 = length v2 in 
+        if l1 <> l2 then
+            invalid_arg "map2_acc: vectors must have the same length"
+        else begin
+            let ( - ) = Int.sub in
+            for x = 0 to l1 - 1 do 
+                acc := f (get v1 x) (get v2 x) !acc
+            done
+        end
+        
 
-    (* TODO: might want to check how we could implement this*)
-
-    (* let fold_left f init v =  *)
-    (*     v >>= fun a -> return (Array.fold_left f init a) *)
-    (* let fold_right = Array.fold_right *)
+    let fold_left f init v = 
+        match v with 
+        | Empty -> raise (Failure "Empty Vector")
+        | Vector a -> Array.fold_left f init a
 
     (* -------------------------- *)
 
@@ -143,7 +159,7 @@ module Make(Element : Field) = struct
         let neutral_vector = init (length v.(0)) Element.zero in 
         Array.map2 scl v c |> Array.fold_left add neutral_vector
 
-        (** Will raise Index_out_of_bound if size does not match*)
+    (** Will raise Index_out_of_bound if size does not match*)
     let linear_comb_fma (a : t array) (c : elt array) = 
         let a_size = Array.length a in
         let c_size = Array.length c in
@@ -165,7 +181,13 @@ module Make(Element : Field) = struct
 
     let lerp v1 v2 t = map2 (fun e1 e2 -> lerp_p e1 e2 t) v1 v2
 
-    let dot v1 v2 = map2 ( * ) v1 v2
+    let dot v1 v2 = map2 ( * ) v1 v2 |> fold_left ( + ) Element.zero
+
+    let dot_fma v1 v2 = 
+        let acc = ref Element.zero in 
+        map2_acc fma v1 v2 acc;
+        !acc
+
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
     let of_array (arr : elt array) = return arr

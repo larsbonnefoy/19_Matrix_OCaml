@@ -59,3 +59,16 @@ let () = FloatVector.display comb3
 let () = print_endline "EX 02"
 let () = Printf.printf "%.2f %.2f %.2f %.2f\n" (FloatVector.lerp_p 0. 1. 0.) (FloatVector.lerp_p 0. 1. 1.) (FloatVector.lerp_p 0. 1. 0.) (FloatVector.lerp_p 21. 42. 0.3)
 let () = Printf.printf "%d %d %d %d\n" (IntVector.lerp_p 0 1 0) (IntVector.lerp_p 0 1 1) (IntVector.lerp_p 0 1 0) (IntVector.lerp_p 21 42 3)
+
+let () = print_endline "EX 03"
+let u = FloatVector.of_array [|0.; 0.|]
+let v = FloatVector.of_array [|1.; 1.|]
+let () = Printf.printf "%f %f\n" (FloatVector.dot u v) (FloatVector.dot_fma u v)
+
+let u = FloatVector.of_array [|1.; 1.|]
+let v = FloatVector.of_array [|1.; 1.|]
+let () = Printf.printf "%f %f\n" (FloatVector.dot u v) (FloatVector.dot_fma u v)
+
+let u = FloatVector.of_array [|-1.; 6.|]
+let v = FloatVector.of_array [|3.; 2.|]
+let () = Printf.printf "%f %f\n" (FloatVector.dot u v) (FloatVector.dot_fma u v)

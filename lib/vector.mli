@@ -7,6 +7,10 @@ module type Field = sig
     val sub : t -> t -> t
     val mul : t -> t -> t
     val div : t -> t -> t
+
+    (** Defined only in Floats, required for other implementation
+        fma x y z returns x * y + z *)
+    val fma : t -> t -> t -> t
     val to_string : t -> string
 end
 
@@ -50,6 +54,8 @@ module type S = sig
     val scl_ip : t -> elt -> unit
 
     val linear_comb : t array -> elt array -> t
+
+    val linear_comb_fma : t array -> elt array -> t
 
     (** [lerp_e p1 p2 t] is the point on the line between e1 e2 at t distance from e1
          Example: lerp 0. 1. 0.5 is 0.5

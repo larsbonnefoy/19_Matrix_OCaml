@@ -1,6 +1,7 @@
 open Linear_Algebra
 
-module IntVector = Vector.Make(Int)
+
+module IntVector = Vector.Make(struct include Int let fma x y z = x * y + z end)
 module FloatVector = Vector.Make(Float)
 
 (* let a = [| 1; 2; 3 |]
@@ -52,6 +53,9 @@ let v1 = FloatVector.of_array [| 1.; 2.; 3. |]
 let v2 = FloatVector.of_array [| 0.; 10.; ~-.100. |]
 let comb2 = FloatVector.linear_comb [| v1; v2 |] [| 10.; ~-.2.|]
 let () = FloatVector.display comb2
+let comb3 = FloatVector.linear_comb_fma [| v1; v2 |] [| 10.; ~-.2.|]
+let () = FloatVector.display comb3
 
 let () = print_endline "EX 02"
 let () = Printf.printf "%.2f %.2f %.2f %.2f\n" (FloatVector.lerp_p 0. 1. 0.) (FloatVector.lerp_p 0. 1. 1.) (FloatVector.lerp_p 0. 1. 0.) (FloatVector.lerp_p 21. 42. 0.3)
+let () = Printf.printf "%d %d %d %d\n" (IntVector.lerp_p 0 1 0) (IntVector.lerp_p 0 1 1) (IntVector.lerp_p 0 1 0) (IntVector.lerp_p 21 42 3)

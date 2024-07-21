@@ -8,6 +8,7 @@ module type Field = sig
     val sub : t -> t -> t
     val mul : t -> t -> t
     val div : t -> t -> t
+    val fma : t -> t -> t -> t
     val to_string : t -> string
 end
 
@@ -26,6 +27,7 @@ module type S = sig
     val scl : t -> elt -> t
     val scl_ip : t -> elt -> unit
     val linear_comb : t array -> elt array -> t
+    val linear_comb_fma : t array -> elt array -> t
     val lerp_p : elt -> elt -> elt -> elt
     val lerp : t -> t -> elt -> t
     val dot : t -> t -> t
@@ -59,10 +61,19 @@ module Make(Element : Field) = struct
     let ( - ) = Element.sub
     let ( + ) = Element.add
 
+    (** Defined only in Floats, required for other implementation
+        fma x y z returns x * y + z *)
+    let fma = Element.fma
+
     (* Redfine standard Array operations as operations on Vector*)
     let length = function
         | Empty -> 0
         | Vector s -> (Array.length s)
+
+    let get v pos = 
+        match v with
+        | Empty -> raise (Failure "Empty Vector")
+        | Vector s -> Array.get s pos
 
     let map f v = 
         v >>= fun a -> return (Array.map f a)
@@ -128,20 +139,30 @@ module Make(Element : Field) = struct
 
     let scl_ip v s = map_ip ( ( * ) s) v
 
-    (* TODO: could be implemented with Float.fma for floats*)
     let linear_comb (v : t array) (c : elt array) = 
-        let size_vector = length v.(0) in 
-        let neutral_vector = init size_vector Element.zero in 
+        let neutral_vector = init (length v.(0)) Element.zero in 
         Array.map2 scl v c |> Array.fold_left add neutral_vector
-        (* let scaled_array = Array.map2 scl v c in *)
-        (* let size_vector = length scaled_array.(0) in *)
-        (* let neutral_vector = init size_vector Element.zero in   *)
-        (* Array.fold_left add neutral_vector scaled_array  *)
-        (* Fold left reduced the array into neutral vector which is already of type 'a t*)
 
-    let lerp_p (p1 : elt) (p2 : elt) t = p1 + (p2 - p1) * t
+        (** Will raise Index_out_of_bound if size does not match*)
+    let linear_comb_fma (a : t array) (c : elt array) = 
+        let a_size = Array.length a in
+        let c_size = Array.length c in
+        if  a_size = 0 then raise (Failure "Empty input array");
+        if  a_size <> c_size then raise (Failure "a and c are of different size");
+        let ( - ) = Int.sub in  
+        let v_size = length a.(0) in
+        let acc = Array.make (v_size) Element.zero in
+        for x = 0 to v_size - 1 do                      (* Loops over each position in vector*)
+            for y = 0 to a_size - 1 do                  (*Loops over scalar array*)
+                let scalar = c.(y) in
+                let vector_entry = get a.(y) x in       (* xth position in yth vector *)
+                acc.(x) <- fma vector_entry scalar acc.(x) 
+            done
+        done;
+        return acc
 
-    (* TODO: could be implemented with Float.fma for floats*)
+    let lerp_p (p1 : elt) (p2 : elt) (t : elt) = fma (p2 - p1) t p1
+
     let lerp v1 v2 t = map2 (fun e1 e2 -> lerp_p e1 e2 t) v1 v2
 
     let dot v1 v2 = map2 ( * ) v1 v2

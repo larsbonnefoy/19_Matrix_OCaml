@@ -1,8 +1,10 @@
 open Linear_Algebra
 
-
-module IntVector = Vector.Make(struct include Int let fma x y z = x * y + z end)
-module FloatVector = Vector.Make(Float)
+module IntVector = Vector.Make(struct include Int 
+                                let fma x y z = x * y + z 
+                                let sqrt x = Float.sqrt (float_of_int x)
+                                end)
+module FloatVector = Vector.Make(struct include Float let to_float (x : float) = x end)
 
 (* let a = [| 1; 2; 3 |]
 let b = [| 1; 2; 3 |] 
@@ -58,7 +60,6 @@ let () = FloatVector.display comb3
 
 let () = print_endline "EX 02"
 let () = Printf.printf "%.2f %.2f %.2f %.2f\n" (FloatVector.lerp_p 0. 1. 0.) (FloatVector.lerp_p 0. 1. 1.) (FloatVector.lerp_p 0. 1. 0.) (FloatVector.lerp_p 21. 42. 0.3)
-let () = Printf.printf "%d %d %d %d\n" (IntVector.lerp_p 0 1 0) (IntVector.lerp_p 0 1 1) (IntVector.lerp_p 0 1 0) (IntVector.lerp_p 21 42 3)
 
 let () = print_endline "EX 03"
 let u = FloatVector.of_array [|0.; 0.|]

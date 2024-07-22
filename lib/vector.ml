@@ -9,7 +9,10 @@ module type Field = sig
     val mul : t -> t -> t
     val div : t -> t -> t
     val fma : t -> t -> t -> t
+    val abs : t -> t
+    val sqrt : t -> float
     val to_string : t -> string
+    val to_float : t -> float
 end
 
 module type S = sig
@@ -32,6 +35,10 @@ module type S = sig
     val lerp : t -> t -> elt -> t
     val dot : t -> t -> elt
     val dot_fma : t -> t -> elt
+    val norm_1 : t -> elt
+    val norm : t -> float
+    val norm_inf : t -> elt
+    val cos : t -> t -> float
     val of_array : elt array -> t
     val of_list : elt list -> t
 end
@@ -95,8 +102,8 @@ module Make(Element : Field) = struct
         (* Need to redefine - operator to make it work with ints *)
         let ( - ) = Int.sub in  
         match (v1, v2) with
-        | (Empty, _) | (_, Empty)  -> raise (Invalid_argument "Empty Vector")
-        | (v1, v2) when (length v1) <> (length v2) -> raise (Invalid_argument "Vectors have different lengths")
+        | (Empty, _) | (_, Empty)  -> raise (Invalid_argument "map2_ip: v1 or v2 is empty")
+        | (v1, v2) when (length v1) <> (length v2) -> raise (Invalid_argument "map2_ip: v1 and v2 are different lengths")
         | (Vector a1, Vector a2) -> begin
             for i = 0 to (Array.length a1) - 1 do 
                 a1.(i) <- (f a1.(i) a2.(i))
@@ -163,8 +170,8 @@ module Make(Element : Field) = struct
     let linear_comb_fma (a : t array) (c : elt array) = 
         let a_size = Array.length a in
         let c_size = Array.length c in
-        if  a_size = 0 then raise (Failure "Empty input array");
-        if  a_size <> c_size then raise (Failure "a and c are of different size");
+        if  a_size = 0 then raise (Failure "linear_comb_fma: Empty input array");
+        if  a_size <> c_size then raise (Failure "linear_comb_fma: a and c are of different size");
         let ( - ) = Int.sub in  
         let v_size = length a.(0) in
         let acc = Array.make (v_size) Element.zero in
@@ -187,6 +194,26 @@ module Make(Element : Field) = struct
         let acc = ref Element.zero in 
         map2_acc fma v1 v2 acc;
         !acc
+
+    (** [norm_1 v] is the Manhattan norm of v*)
+    let norm_1 v = fold_left ( fun acc x -> acc + Element.abs x) Element.zero v
+
+    (** [norm v] is the Euclidan norm of v*)
+    let norm v = (dot_fma v v) |> Element.sqrt
+
+    (** [norm_inf v] is the maximum norm of v*)
+    let norm_inf v = 
+            let max_abs acc x = if (Element.abs x) > acc then Element.abs x else acc in
+            fold_left max_abs (get v 0) v
+
+    let cos v1 v2 = 
+        match (v1, v2) with
+        | (Empty, _ ) | (_, Empty) -> raise (Failure "cos: v1 or v2 is empty")
+        | (Vector _, Vector _) -> begin
+                let num = dot_fma v1 v2 in 
+                let denom = (norm v1) *. (norm v2) in 
+                (Element.to_float num) /. denom
+            end
 
 
     (** [of_array arr] is the Vector containing the same elements as arr*)

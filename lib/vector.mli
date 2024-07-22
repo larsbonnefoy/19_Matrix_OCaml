@@ -11,7 +11,11 @@ module type Field = sig
     (** Defined only in Floats, required for other implementation
         fma x y z returns x * y + z *)
     val fma : t -> t -> t -> t
+    val abs : t -> t
+    val sqrt : t -> float
+    val cos : t -> t -> float
     val to_string : t -> string
+    val to_float : t -> float
 end
 
 module type S = sig
@@ -72,6 +76,12 @@ module type S = sig
 
     (* * [dot_fma v1 v2] is the dot product of v1 with v2 *)
     val dot_fma : t -> t -> elt
+    
+    val norm_1 : t -> elt
+
+    val norm : t -> float
+
+    val norm_inf : t -> elt
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
     val of_array : elt array -> t

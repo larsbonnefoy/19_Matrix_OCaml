@@ -4,6 +4,7 @@ module IntVector = Vector.Make(struct include Int
                                 let fma x y z = x * y + z 
                                 let sqrt x = Float.sqrt (float_of_int x)
                                 end)
+
 module FloatVector = Vector.Make(struct include Float let to_float (x : float) = x end)
 
 (* let a = [| 1; 2; 3 |]

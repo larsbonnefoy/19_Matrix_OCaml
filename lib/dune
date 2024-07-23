@@ -1,2 +1,3 @@
 (library
- (name Linear_Algebra))
+ (name Linear_Algebra)
+ (modules vector matrix))

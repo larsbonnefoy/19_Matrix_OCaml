@@ -13,7 +13,6 @@ module type Field = sig
     val fma : t -> t -> t -> t
     val abs : t -> t
     val sqrt : t -> float
-    val cos : t -> t -> float
     val to_string : t -> string
     val to_float : t -> float
 end
@@ -82,6 +81,8 @@ module type S = sig
     val norm : t -> float
 
     val norm_inf : t -> elt
+
+    val cos : t -> t -> float
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
     val of_array : elt array -> t

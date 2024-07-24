@@ -28,7 +28,7 @@ module type S = sig
     val sub : t -> t -> t
     (* val sub_ip : t -> t -> unit *)
     val scl : t -> elt -> t
-    (* val scl_ip : t -> elt -> unit *)
+    val scl_ip : t -> elt -> unit
     (* val lerp : t -> t -> elt -> t *)
     val of_array : elt array array -> t
     (* val of_list : elt list list -> t *)
@@ -83,6 +83,12 @@ module Make(Element : ReqOp) = struct
             return s new_m
         end 
 
+    let map_ip f = function
+        | Matrix {size = _; m} -> begin 
+            Array.iter (fun sub_a -> Array.map_inplace (fun e -> f e) sub_a) m
+        end
+
+
     let map2 f m1 m2 = 
         m1 >>= fun array_2d_1 -> 
         m2 >>= fun array_2d_2 -> 
@@ -107,7 +113,8 @@ module Make(Element : ReqOp) = struct
     let sub m1 m2 = map2 ( - ) m1 m2
 
     let scl m s = map ( ( * ) s) m
-    (* let add m1 m2 =  *)
+
+    let scl_ip m s = map_ip ( ( * ) s) m
 
     (* * Makes a column of *)
     let of_array (a : elt array array) = 
@@ -118,6 +125,5 @@ module Make(Element : ReqOp) = struct
                 then raise (Invalid_argument "of_array: rows do not match") in
             Array.iter check_f a;
         return (rows, base_col) a
-        
 
 end

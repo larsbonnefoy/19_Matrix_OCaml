@@ -22,18 +22,18 @@ module type S = sig
     type t
 
     val init : int -> int -> elt -> t
-    val empty : t
     val is_empty : t -> bool
     val size : t -> int * int
     val display : t -> unit
-    (* val add : t -> t -> t *)
+    val to_string : t -> string
+    val add : t -> t -> t
     (* val add_ip : t -> t -> unit *)
-    (* val sub : t -> t -> t *)
+    val sub : t -> t -> t
     (* val sub_ip : t -> t -> unit *)
-    (* val scl : t -> elt -> t *)
+    val scl : t -> elt -> t
     (* val scl_ip : t -> elt -> unit *)
     (* val lerp : t -> t -> elt -> t *)
-    (* val of_array : elt array array -> t *)
+    val of_array : elt array array -> t
     (* val of_list : elt list list -> t *)
 end
 

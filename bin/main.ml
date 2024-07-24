@@ -10,19 +10,7 @@ module FloatVector = Vector.Make(struct include Float let to_float (x : float) =
 
 module FloatMatrix = Matrix.Make(Float)
 
-let m = FloatMatrix.init 3 2 2.
-
-let () = FloatMatrix.display m
-(* let a = [| 1; 2; 3 |]
-let b = [| 1; 2; 3 |] 
-
-let c = [| a; b |] *)
-
-(* let fold = Array.fold_lft (fun a1 a2 -> Array.map2 ( + ) a1 a2) (Array.init 3 (fun _ -> 0)) c
-
-let () = Array.iter (Print.printf "\n%d") fold *)
-
-let () = print_endline "EX 00"
+let () = print_newline () ; print_endline "=====EX 00===="
 
 let u = FloatVector.of_array [|2. ; 3.|]
 let v = FloatVector.of_array [|5. ; 7.|]
@@ -49,8 +37,19 @@ let () = print_string "Not changed: " ; FloatVector.display u
 let () = FloatVector.scl_ip u s
 let () = print_string "u changed ip: " ; FloatVector.display u
 
+let u = FloatMatrix.of_array [| [|1.; 2.|]; 
+                                [|3.; 4.|];|]
 
-let () = print_endline "EX 01"
+let v = FloatMatrix.of_array [| [|7.; 4.|]; 
+                                [|-2.; 2.|];|]
+
+let () = FloatMatrix.display (FloatMatrix.add u v)
+let () = print_newline ()
+let () = FloatMatrix.display (FloatMatrix.sub u v)
+let () = print_newline ()
+let () = FloatMatrix.display (FloatMatrix.scl u 2.)
+
+let () = print_endline "====EX 01===="
 let e1 = FloatVector.of_array [| 1.; 0.; 0. |]
 let e2 = FloatVector.of_array [| 0.; 1.; 0. |]
 let e3 = FloatVector.of_array [| 0.; 0.; 1. |]

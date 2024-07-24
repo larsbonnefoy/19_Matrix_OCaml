@@ -7,6 +7,12 @@ module IntVector = Vector.Make(struct include Int
 
 module FloatVector = Vector.Make(struct include Float let to_float (x : float) = x end)
 
+
+module FloatMatrix = Matrix.Make(Float)
+
+let m = FloatMatrix.init 3 2 2.
+
+let () = FloatMatrix.display m
 (* let a = [| 1; 2; 3 |]
 let b = [| 1; 2; 3 |] 
 

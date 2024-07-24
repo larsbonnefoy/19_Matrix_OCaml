@@ -65,6 +65,7 @@ module Make(Element : ReqOp) = struct
         fma x y z returns x * y + z *)
     (* let fma = Element.fma *)
 
+    (** [init r c v] is the matrix with r rows and c columns with value v*)
     let init r c v = 
         if r = 0 || c = 0 then Empty 
         else Matrix({size=(r, c); m = Array.make_matrix c r v})
@@ -80,7 +81,13 @@ module Make(Element : ReqOp) = struct
     let display = function
         | Empty -> Printf.printf "| |"
         | Matrix { size = _; m} -> begin
-            let print_internal a = Array.iter (fun e -> Printf.printf "%s " (Element.to_string e)) a in 
-            Array.iter print_internal m
+            let print_internal a = 
+                Printf.printf "| " ; 
+                Array.iter (fun e -> Printf.printf "%s " (Element.to_string e)) a ;
+                Printf.printf "|\n" ; 
+            in
+             Array.iter print_internal m
         end
+
+    (* let of_array (a : elt array array) = Matrix *)
 end

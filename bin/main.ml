@@ -50,6 +50,18 @@ let () = print_newline ()
 let () = FloatMatrix.display (FloatMatrix.scl u 2.)
 let () = FloatMatrix.scl_ip u 2.
 let () = FloatMatrix.display u
+let () = FloatMatrix.display v
+
+let u = FloatMatrix.of_array [| [|1.; 2.|]; 
+                                [|3.; 4.|];
+                                [|3.; 4.|];|]
+
+let v = FloatMatrix.of_array [| [|7.; 4.|]; 
+                                [|-2.; 2.|];
+                                [|-2.; 2.|];|]
+let () = print_newline ()
+let () = FloatMatrix.add_ip u v 
+let () = FloatMatrix.display u
 
 let () = print_endline "====EX 01===="
 let e1 = FloatVector.of_array [| 1.; 0.; 0. |]

@@ -27,9 +27,9 @@ module type S = sig
     val display : t -> unit
     val to_string : t -> string
     val add : t -> t -> t
-    (* val add_ip : t -> t -> unit *)
+    val add_ip : t -> t -> unit
     val sub : t -> t -> t
-    (* val sub_ip : t -> t -> unit *)
+    val sub_ip : t -> t -> unit
     val scl : t -> elt -> t
     val scl_ip : t -> elt -> unit
     (* val lerp : t -> t -> elt -> t *)

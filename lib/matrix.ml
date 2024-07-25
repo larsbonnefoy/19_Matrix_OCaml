@@ -24,9 +24,9 @@ module type S = sig
     val display : t -> unit
     val to_string : t -> string
     val add : t -> t -> t
-    (* val add_ip : t -> t -> unit *)
+    val add_ip : t -> t -> unit
     val sub : t -> t -> t
-    (* val sub_ip : t -> t -> unit *)
+    val sub_ip : t -> t -> unit
     val scl : t -> elt -> t
     val scl_ip : t -> elt -> unit
     (* val lerp : t -> t -> elt -> t *)
@@ -88,13 +88,26 @@ module Make(Element : ReqOp) = struct
             Array.iter (fun sub_a -> Array.map_inplace (fun e -> f e) sub_a) m
         end
 
-
     let map2 f m1 m2 = 
+        if size m1 <> size m2 then raise (Invalid_argument "map2_ip: m1 and m2 are of different size");
         m1 >>= fun array_2d_1 -> 
         m2 >>= fun array_2d_2 -> 
-        let elt_fun = fun e1 e2 -> f e1 e2 in
-        let map_rows = fun a1 a2 -> Array.map2 elt_fun a1 a2 in
+        let map_elt = fun e1 e2 -> f e1 e2 in
+        let map_rows = fun a1 a2 -> Array.map2 map_elt a1 a2 in
         return (size m1) (Array.map2 map_rows array_2d_1 array_2d_2)
+
+    (** accumulates in m1*)
+    let map2_ip f m1 m2 = 
+        if size m1 <> size m2 then raise (Invalid_argument "map2_ip: m1 and m2 are of different size");
+        let ( - ) = Int.sub in
+        match (m1, m2) with 
+        | (Matrix {size = s1 ; m = m1} , Matrix {size = _ ; m = m2}) -> begin
+            for i = 0  to (fst s1) - 1 do 
+                for j = 0 to (snd s1) - 1 do 
+                    m1.(i).(j) <- f m1.(i).(j) m2.(i).(j)
+                done
+            done
+        end
 
     let to_string = function
         | Matrix {size = (0, _); _ } | Matrix { size = (_, 0); _} -> "| ... |\n"
@@ -110,7 +123,11 @@ module Make(Element : ReqOp) = struct
     
     let add m1 m2 = map2 ( + ) m1 m2
 
+    let add_ip m1 m2 = map2_ip ( + ) m1 m2
+
     let sub m1 m2 = map2 ( - ) m1 m2
+
+    let sub_ip m1 m2 = map2_ip ( - ) m1 m2
 
     let scl m s = map ( ( * ) s) m
 

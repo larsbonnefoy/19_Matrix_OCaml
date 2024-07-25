@@ -29,7 +29,7 @@ module type S = sig
     val sub_ip : t -> t -> unit
     val scl : t -> elt -> t
     val scl_ip : t -> elt -> unit
-    (* val lerp : t -> t -> elt -> t *)
+    val lerp : t -> t -> elt -> t
     val of_array : elt array array -> t
     (* val of_list : elt list list -> t *)
 end
@@ -63,8 +63,7 @@ module Make(Element : ReqOp) = struct
 
     (** Defined only in Float module, required for other implementation
         fma x y z returns x * y + z *)
-    (* let fma = Element.fma *)
-
+    let fma = Element.fma
 
     (** [init r c v] is the matrix with r rows and c columns with value v 
         @raises Invalid_argument if r < 0 or c < 0 *)
@@ -132,6 +131,10 @@ module Make(Element : ReqOp) = struct
     let scl m s = map ( ( * ) s) m
 
     let scl_ip m s = map_ip ( ( * ) s) m
+
+    let lerp_p (p1 : elt) (p2 : elt) (t : elt) = fma (p2 - p1) t p1
+
+    let lerp m1 m2 t = map2 (fun e1 e2 -> lerp_p e1 e2 t) m1 m2
 
     (* * Makes a column of *)
     let of_array (a : elt array array) = 

@@ -70,6 +70,8 @@ module type S = sig
     (** [lerp v1 v2 t] is the point on the line *)
     val lerp : t -> t -> elt -> t
 
+    val lerp_ip : t -> t -> elt -> unit
+
     (* * [dot v1 v2] is the dot product of v1 with v2 *)
     val dot : t -> t -> elt
 

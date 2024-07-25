@@ -32,7 +32,7 @@ module type S = sig
     val sub_ip : t -> t -> unit
     val scl : t -> elt -> t
     val scl_ip : t -> elt -> unit
-    (* val lerp : t -> t -> elt -> t *)
+    val lerp : t -> t -> elt -> t
     val of_array : elt array array -> t
     (* val of_list : elt list list -> t *)
 end

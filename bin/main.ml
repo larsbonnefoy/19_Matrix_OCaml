@@ -78,10 +78,15 @@ let () = FloatVector.display comb2
 let comb3 = FloatVector.linear_comb_fma [| v1; v2 |] [| 10.; ~-.2.|]
 let () = FloatVector.display comb3
 
-let () = print_endline "EX 02"
+let () = print_endline "====EX 02===="
 let () = Printf.printf "%.2f %.2f %.2f %.2f\n" (FloatVector.lerp_p 0. 1. 0.) (FloatVector.lerp_p 0. 1. 1.) (FloatVector.lerp_p 0. 1. 0.) (FloatVector.lerp_p 21. 42. 0.3)
 
-let () = print_endline "EX 03"
+let u = FloatMatrix.of_array [| [|2.; 1.|]; [| 3.; 4.|]|]
+let v = FloatMatrix.of_array [| [|20.; 10.|]; [| 30.; 40.|]|]
+
+let () = FloatMatrix.display (FloatMatrix.lerp u v 0.5)
+
+let () = print_endline "====EX 03===="
 let u = FloatVector.of_array [|0.; 0.|]
 let v = FloatVector.of_array [|1.; 1.|]
 let () = Printf.printf "%f %f\n" (FloatVector.dot u v) (FloatVector.dot_fma u v)

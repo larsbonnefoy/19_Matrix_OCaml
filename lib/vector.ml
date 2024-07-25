@@ -33,6 +33,7 @@ module type S = sig
     val linear_comb_fma : t array -> elt array -> t
     val lerp_p : elt -> elt -> elt -> elt
     val lerp : t -> t -> elt -> t
+    val lerp_ip : t -> t -> elt -> unit
     val dot : t -> t -> elt
     val dot_fma : t -> t -> elt
     val norm_1 : t -> elt
@@ -187,6 +188,8 @@ module Make(Element : Field) = struct
     let lerp_p (p1 : elt) (p2 : elt) (t : elt) = fma (p2 - p1) t p1
 
     let lerp v1 v2 t = map2 (fun e1 e2 -> lerp_p e1 e2 t) v1 v2
+
+    let lerp_ip v1 v2 t = map2_ip (fun e1 e2 -> lerp_p e1 e2 t) v1 v2
 
     let dot v1 v2 = map2 ( * ) v1 v2 |> fold_left ( + ) Element.zero
 

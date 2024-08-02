@@ -16,6 +16,7 @@ module type S = sig
     val lerp : t -> t -> elt -> t
     val lerp_ip : t -> t -> elt -> unit
     val mul_vec : t -> v -> v
+    val mul_vec_ip : t -> v -> unit
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end
@@ -97,25 +98,48 @@ module Make(Vector : Vector.S) = struct
         | Matrix {size=(nb_rows, nb_cols); repr=_} when nb_cols <> Vector.length v -> begin
                 raise (Invalid_argument (Printf.sprintf "mul_vec: dim of m (%d, %d) do not match size of v (%d)" nb_rows nb_cols (Vector.length v)));
             end 
-        | Matrix {size=(nb_rows, _); repr} ->  begin
+        | Matrix {size=(nb_rows, _); repr} -> begin
                 Vector.init nb_rows (fun i -> Vector.dot_fma repr.(i) v)
             end
 
+    let mul_vec_ip (m : t) (v : v) = 
+        match m with
+        | Matrix {size=(nb_rows, nb_cols); repr=_} when nb_cols <> Vector.length v -> begin
+                raise (Invalid_argument (Printf.sprintf "mul_vec: dim of m (%d, %d) do not match size of v (%d)" nb_rows nb_cols (Vector.length v)));
+        end 
+        | Matrix {size=(nb_rows, _); repr} -> begin
+            let vec_cpy = Vector.copy v in
+            for i = 0 to nb_rows - 1 do
+                vec_cpy
+                |> Vector.dot_fma repr.(i)
+                |> Vector.set v i
+            done
+        end
+
+
     let of_vector_array (a : v array) = 
-        let rows = Array.length a in 
-        let base_col = Vector.length a.(0) in 
-            let check_f sub_a = 
-                if (Vector.length sub_a) <> base_col 
-                then raise (Invalid_argument "of_array: rows do not match") in
-            Array.iter check_f a;
-        return (rows, base_col) a
+        let nb_rows = Array.length a in 
+        if nb_rows = 0 then raise (Invalid_argument "of_array: row = 0");
+        let len_col = Vector.length a.(0) in 
+        if len_col = 0 then raise (Invalid_argument "of_array: col = 0");
+
+        let check_f sub_a = 
+            if (Vector.length sub_a) <> len_col 
+            then raise (Invalid_argument "of_array: rows do not match") in
+        Array.iter check_f a;
+
+        return (nb_rows, len_col) a
 
     let of_array (a : elt array array) = 
         let nb_rows = Array.length a in 
+        if nb_rows = 0 then raise (Invalid_argument "of_array: row = 0");
         let len_col = Array.length a.(0) in 
+        if len_col = 0 then raise (Invalid_argument "of_array: col = 0");
+
         let create_row i = 
             let v = Vector.of_array a.(i) in
             if Vector.length v <> len_col then raise (Invalid_argument "of_array: rows do not match")
             else v in
+
         return (nb_rows, len_col) (Array.init nb_rows create_row)
 end

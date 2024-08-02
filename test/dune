@@ -1,2 +1,3 @@
 (test
- (name Matrix_OCaml))
+ (name ex07)
+ (libraries LinearAlgebra ounit2))

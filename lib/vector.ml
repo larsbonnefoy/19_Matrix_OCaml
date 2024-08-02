@@ -23,6 +23,8 @@ module type S = sig
     val is_empty : t -> bool
     val length : t -> int
     val display : t -> unit
+    val equal: t -> t -> bool
+    val set : t -> int -> elt -> unit
     val add : t -> t -> t
     val add_ip : t -> t -> unit
     val sub : t -> t -> t
@@ -43,6 +45,7 @@ module type S = sig
     val to_string : t -> string
     val of_array : elt array -> t
     val of_list : elt list -> t
+    val copy : t -> t
     val map : (elt -> elt) -> t -> t
     val map_ip : (elt -> elt) -> t -> unit
     val map2_ip : (elt -> elt -> elt) -> t -> t -> unit
@@ -84,6 +87,15 @@ module Make(Element : Field) = struct
     let get v i = 
         match v with
         | Vector s -> Array.get s i
+
+    (**[set v i x] modifies v in place and replaces element at index i with x *)
+    let set v i x = 
+        match v with 
+        | Vector s -> Array.set s i x
+
+    let equal v1 v2 = 
+        match (v1, v2) with 
+        | (Vector a1, Vector a2) -> Array.for_all2 (fun a b -> a = b) a1 a2
 
     let map f v = 
         v >>= fun a -> return (Array.map f a)
@@ -209,11 +221,18 @@ module Make(Element : Field) = struct
                 (Element.to_float num) /. denom
             end
 
-
     (** [of_array arr] is the Vector containing the same elements as arr*)
-    let of_array (arr : elt array) = return arr
+    let of_array (arr : elt array) = 
+        if Array.length arr = 0 then raise (Invalid_argument "of_array: Empty array")
+        else return arr
 
     (** [of_list lst] is the Vector containing the same elements as lst*)
-    let of_list (lst : elt list) = Vector(Array.of_list lst)
+    let of_list (lst : elt list) = 
+        if List.length lst = 0 then raise (Invalid_argument "of_list: Empty list")
+        else return (Array.of_list lst)
+
+    let copy = function
+        | Vector v -> return (Array.copy v)
+        
 
 end

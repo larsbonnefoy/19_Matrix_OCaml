@@ -38,6 +38,10 @@ module type S = sig
 
     val display : t -> unit
 
+    val equal: t -> t -> bool
+
+    val set : t -> int -> elt -> unit
+
     (** [add v1 v2] is the element wise addition of v1 and v2
         Raises Invalid_argument if len v1 <> len v2
         Raises Empty_vector if v1 or v2 is empty*)
@@ -95,6 +99,8 @@ module type S = sig
 
     (** [of_list lst] is the Vector containing the same elements as lst*)
     val of_list : elt list -> t
+
+    val copy : t -> t
 
     val map : (elt -> elt) -> t -> t
 

@@ -23,8 +23,9 @@ module type S = sig
     val lerp : t -> t -> elt -> t
     val lerp_ip : t -> t -> elt -> unit
     val mul_vec : t -> v -> v
+    val mul_vec_ip : t -> v -> unit
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end
 
-module Make (Vector : Vector.S) : S with type elt = Vector.elt
+module Make (Vector : Vector.S) : S with type elt = Vector.elt and type v = Vector.t

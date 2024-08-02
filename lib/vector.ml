@@ -18,6 +18,8 @@ end
 module type S = sig
     type elt 
     type t
+    val elt_zero : elt
+    val elt_one : elt
     val make : int -> elt -> t
     val init : int -> (int -> elt) -> t
     val is_empty : t -> bool
@@ -56,6 +58,10 @@ module Make(Element : Field) = struct
     type elt = Element.t
 
     type t = Vector of elt array
+
+    let elt_zero = Element.zero
+
+    let elt_one = Element.one
 
     (* Monad Operations*)
 
@@ -146,6 +152,7 @@ module Make(Element : Field) = struct
         @raise Invalid_argument if s < 0 or s > Sys.max_array_length *)
     let make (s : int) (v : elt) = return (Array.make s v)
 
+    (**[init n f] creates a new vector of length n where elements are initalised to f i where i is the index from 0 to n - 1*)
     let init n f = return (Array.init n f)
 
     let is_empty v = if length v = 0 then true else false

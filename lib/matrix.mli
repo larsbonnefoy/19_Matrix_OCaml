@@ -3,8 +3,11 @@ module type S = sig
     type t
     type v
 
+
     (** [make r c v] is a matrix with r rows and c columns with filled with value v*)
     val make : int -> int -> elt -> t
+
+    val init : int -> int -> (int -> int -> elt) -> t
 
     (** [size m] is (row * col) *)
     val size : t -> int * int

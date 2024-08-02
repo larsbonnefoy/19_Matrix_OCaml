@@ -3,6 +3,7 @@ module type S = sig
     type t
     type v
     val make : int -> int -> elt -> t
+    val init : int -> int -> (int -> int -> elt) -> t
     val size : t -> int * int
     val is_empty : t -> bool
     val to_string : t -> string
@@ -65,6 +66,10 @@ module Make(Vector : Vector.S) = struct
     (* [make r c v] is a matrix with r rows and c columns with filled with value v*)
     let make r c v = Matrix({size=(r, c); repr = Array.make r (Vector.make c v)})
 
+    (** [init r c f] initalises a new matrix where element a at row r and column c if the result of f r c *)
+    let init (r : int) (c : int) (f : int -> int -> elt) = 
+        return (r, c) (Array.init r (fun r -> Vector.init c (f r)))
+
     let is_empty = function
         | Matrix {size = (0, _); _ } | Matrix { size = (_, 0); _} -> true
         | Matrix {size = (_, _); _ }  -> false
@@ -115,7 +120,6 @@ module Make(Vector : Vector.S) = struct
                 |> Vector.set v i
             done
         end
-
 
     let of_vector_array (a : v array) = 
         let nb_rows = Array.length a in 

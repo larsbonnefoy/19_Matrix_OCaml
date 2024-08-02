@@ -9,10 +9,10 @@ module type ReqOp = sig
     val mul : t -> t -> t
     val div : t -> t -> t
     val fma : t -> t -> t -> t
-    (* val abs : t -> t *)
-    (* val sqrt : t -> float *)
+    val abs : t -> t
+    val sqrt : t -> float
     val to_string : t -> string
-    (* val to_float : t -> float *)
+    val to_float : t -> float
 end
 
 module type S = sig
@@ -145,5 +145,7 @@ module Make(Element : ReqOp) = struct
                 then raise (Invalid_argument "of_array: rows do not match") in
             Array.iter check_f a;
         return (rows, base_col) a
+
+    (* let mul (m : t) (v : v) = display m ; v *)
 
 end

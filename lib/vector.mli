@@ -24,9 +24,11 @@ module type S = sig
     (** Is of type Vector 'a or Empty*)
     type t
 
-    val init : int -> elt -> t
+    (** [make s v] creates a new vector of size s filled with value v
+        @raise Invalid_argument if s < 0 or s > Sys.max_array_length *)
+    val make : int -> elt -> t
 
-    val empty : t
+    val init : int -> (int -> elt) -> t
 
     (** [is_empty v] is true if v is Empty, false if v is Vector _*)
     val is_empty : t -> bool
@@ -86,11 +88,19 @@ module type S = sig
 
     val cos : t -> t -> float
 
+    val to_string : t -> string
+
     (** [of_array arr] is the Vector containing the same elements as arr*)
     val of_array : elt array -> t
 
     (** [of_list lst] is the Vector containing the same elements as lst*)
     val of_list : elt list -> t
+
+    val map : (elt -> elt) -> t -> t
+
+    val map_ip : (elt -> elt) -> t -> unit
+
+    val map2_ip : (elt -> elt -> elt) -> t -> t -> unit
 end
 
 (* module Make (Ord : OrderedType) : S with type key = Ord.t *)

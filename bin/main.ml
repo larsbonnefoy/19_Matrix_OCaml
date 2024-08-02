@@ -7,8 +7,12 @@ module IntVector = Vector.Make(struct include Int
 
 module FloatVector = Vector.Make(struct include Float let to_float (x : float) = x end)
 
+module FloatMatrix = Matrix.Make(struct include Float let to_float (x : float) = x end)
 
-module FloatMatrix = Matrix.Make(Float)
+module MatrixTestF = Matrix_test.Make(FloatVector)
+
+let m = MatrixTestF.make 3 2 2.
+let () = MatrixTestF.display m
 
 let () = print_newline () ; print_endline "=====EX 00===="
 
@@ -98,3 +102,10 @@ let () = Printf.printf "%f %f\n" (FloatVector.dot u v) (FloatVector.dot_fma u v)
 let u = FloatVector.of_array [|-1.; 6.|]
 let v = FloatVector.of_array [|3.; 2.|]
 let () = Printf.printf "%f %f\n" (FloatVector.dot u v) (FloatVector.dot_fma u v)
+
+let () = print_endline "====EX 03===="
+(* let m = FloatMatrix.of_array [| [|7.; 4.|];  *)
+(*                                 [|-2.; 2.|];|] *)
+(* let v = FloatVector.of_array [|3.; 2.|] *)
+
+(* let mulvec = FloatMatrix.mul m v *)

@@ -18,8 +18,8 @@ end
 module type S = sig
     type elt 
     type t
-    val init : int -> elt -> t
-    val empty : t
+    val make : int -> elt -> t
+    val init : int -> (int -> elt) -> t
     val is_empty : t -> bool
     val length : t -> int
     val display : t -> unit
@@ -40,27 +40,28 @@ module type S = sig
     val norm : t -> float
     val norm_inf : t -> elt
     val cos : t -> t -> float
+    val to_string : t -> string
     val of_array : elt array -> t
     val of_list : elt list -> t
+    val map : (elt -> elt) -> t -> t
+    val map_ip : (elt -> elt) -> t -> unit
+    val map2_ip : (elt -> elt -> elt) -> t -> t -> unit
 end
 
 module Make(Element : Field) = struct
 
     type elt = Element.t
 
-    type t = Empty | Vector of elt array
+    type t = Vector of elt array
 
     (* Monad Operations*)
 
     (** [return a] encapsulates a into Vector Type*)
-    let return (a : elt array) = 
-        if Array.length a = 0 then Empty
-        else Vector a
+    let return (a : elt array) = Vector a
 
     (** [bind v op] applies op to the underlying type of v*)
     let bind (v : t) (op : elt array -> t) = 
         match v with
-        | Empty -> Empty
         | Vector a -> op a
 
     let ( >>= ) = bind
@@ -76,20 +77,18 @@ module Make(Element : Field) = struct
 
     (* Redfine standard Array operations as operations on Vector*)
     let length = function
-        | Empty -> 0
         | Vector s -> (Array.length s)
 
-    (**[get v pos] is element at index i in v*)
+    (**[get v pos] is element at index i in v
+    @raises Invalid_argument if n is outside the range 0 to (length a - 1). *)
     let get v i = 
         match v with
-        | Empty -> raise (Failure "Empty Vector")
         | Vector s -> Array.get s i
 
     let map f v = 
         v >>= fun a -> return (Array.map f a)
 
     let map_ip f = function
-        | Empty -> ()
         | Vector a -> Array.map_inplace f a
 
     (** [map2 f v1 v2] is the new vector v where f has been applied element wise to v1 and v2*)
@@ -103,7 +102,6 @@ module Make(Element : Field) = struct
         (* Need to redefine - operator to make it work with ints *)
         let ( - ) = Int.sub in  
         match (v1, v2) with
-        | (Empty, _) | (_, Empty)  -> raise (Invalid_argument "map2_ip: v1 or v2 is empty")
         | (v1, v2) when (length v1) <> (length v2) -> raise (Invalid_argument "map2_ip: v1 and v2 are different lengths")
         | (Vector a1, Vector a2) -> begin
             for i = 0 to (Array.length a1) - 1 do 
@@ -126,30 +124,24 @@ module Make(Element : Field) = struct
             done
         end
         
-
     let fold_left f init v = 
         match v with 
-        | Empty -> raise (Failure "Empty Vector")
         | Vector a -> Array.fold_left f init a
 
     (* -------------------------- *)
 
-    (** [init s v] creates a new vector of size s filled with value v
+    (** [make s v] creates a new vector of size s filled with value v
         @raise Invalid_argument if s < 0 or s > Sys.max_array_length *)
-    let init (s : int) (v : elt) = return (Array.make s v)
+    let make (s : int) (v : elt) = return (Array.make s v)
 
-    let empty = Empty
+    let init n f = return (Array.init n f)
 
-    let is_empty = function
-        | Empty -> true
-        | Vector _ -> false
+    let is_empty v = if length v = 0 then true else false
 
-    let display = function 
-        | Empty -> print_string "[]"
-        | Vector v -> 
-            Printf.printf "[ " ; 
-            Array.iter (fun a -> Printf.printf "%s " (Element.to_string a)) v; 
-            print_endline "]"
+    let to_string = function
+        | Vector v -> ( Array.fold_left (fun acc elem -> acc ^ (Element.to_string elem) ^ " ") "" v )
+
+    let display v = Printf.printf "[ %s]\n" (to_string v)
 
     let add v1 v2 = map2 ( + ) v1 v2
 
@@ -164,7 +156,7 @@ module Make(Element : Field) = struct
     let scl_ip v s = map_ip ( ( * ) s) v
 
     let linear_comb (v : t array) (c : elt array) = 
-        let neutral_vector = init (length v.(0)) Element.zero in 
+        let neutral_vector = make (length v.(0)) Element.zero in 
         Array.map2 scl v c |> Array.fold_left add neutral_vector
 
     (** Will raise Index_out_of_bound if size does not match*)
@@ -211,7 +203,6 @@ module Make(Element : Field) = struct
 
     let cos v1 v2 = 
         match (v1, v2) with
-        | (Empty, _ ) | (_, Empty) -> raise (Failure "cos: v1 or v2 is empty")
         | (Vector _, Vector _) -> begin
                 let num = dot_fma v1 v2 in 
                 let denom = (norm v1) *. (norm v2) in 
@@ -223,8 +214,6 @@ module Make(Element : Field) = struct
     let of_array (arr : elt array) = return arr
 
     (** [of_list lst] is the Vector containing the same elements as lst*)
-    let of_list (lst : elt list) = 
-        if List.length lst = 0 then empty 
-        else Vector(Array.of_list lst)
+    let of_list (lst : elt list) = Vector(Array.of_list lst)
 
 end

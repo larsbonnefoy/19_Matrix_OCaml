@@ -1,7 +1,7 @@
 open LinearAlgebra
 
 module FloatVector = Vector.Make(struct include Float let to_float (x : float) = x end)
-module FloatMatrix = Matrix.Make(FloatVector)
+module FloatMatrix = Matrix.Make(FloatVector)(Float)
 
 let () = Printexc.record_backtrace true
 
@@ -20,6 +20,30 @@ let () = Printexc.record_backtrace true
 
 let () = print_newline () 
 
-let m_test = FloatMatrix.init 10 10 (fun r c -> if r < c then 1. else 0.)
+let m_test = FloatMatrix.of_array [| 
+    [|2.; 3.; 1.; 5.|];
+    [|6.; 13.; 5.; 19.|];
+    [|2.; 19.; 10.; 23.|];
+    [|4.; 10.; 11.; 31.|];
+|]
 
-let () = FloatMatrix.display m_test
+let (l, u) = FloatMatrix.lu_decompo m_test
+
+let () = FloatMatrix.display l 
+
+let () = print_newline ()
+
+let () = FloatMatrix.display u 
+
+let m_row_e = FloatMatrix.of_array [| 
+    [|8.; 5.; ~-.2.; 4.; 28.|];
+    [|4.; 2.5; 20.; 0.; ~-.4. |];
+    [|8.; 5.; 1.; 4.; 17. |];
+|]
+
+let (l, u) = (FloatMatrix.lu_decompo m_row_e)
+
+let () = print_newline ()
+let () = FloatMatrix.display u 
+let () = print_newline ()
+let () = FloatMatrix.display l 

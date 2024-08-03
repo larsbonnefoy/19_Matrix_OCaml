@@ -3,7 +3,6 @@ module type S = sig
     type t
     type v
 
-
     (** [make r c v] is a matrix with r rows and c columns with filled with value v*)
     val make : int -> int -> elt -> t
 
@@ -14,6 +13,10 @@ module type S = sig
 
     (** [is_empty m] is true if col or row m = 0*)
     val is_empty : t -> bool
+
+    val is_square : t -> bool
+
+    val id : int -> int -> t
 
     val to_string: t -> string
     val display : t -> unit
@@ -27,8 +30,21 @@ module type S = sig
     val lerp_ip : t -> t -> elt -> unit
     val mul_vec : t -> v -> v
     val mul_vec_ip : t -> v -> unit
+    val lu_decompo : t -> t * t
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end
 
-module Make (Vector : Vector.S) : S with type elt = Vector.elt and type v = Vector.t
+module type EltOp = sig
+    type t
+    val zero : t
+    val one : t
+    val neg : t -> t
+    val add : t -> t -> t
+    val sub : t -> t -> t
+    val mul : t -> t -> t
+    val div : t -> t -> t
+    val to_string : t -> string
+end
+
+module Make (Vector : Vector.S) (Element : EltOp with type t = Vector.elt) : S with type elt = Element.t and type v = Vector.t

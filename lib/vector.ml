@@ -18,14 +18,13 @@ end
 module type S = sig
     type elt 
     type t
-    val elt_zero : elt
-    val elt_one : elt
     val make : int -> elt -> t
     val init : int -> (int -> elt) -> t
     val is_empty : t -> bool
     val length : t -> int
     val display : t -> unit
     val equal: t -> t -> bool
+    val get: t -> int -> elt
     val set : t -> int -> elt -> unit
     val add : t -> t -> t
     val add_ip : t -> t -> unit
@@ -58,10 +57,6 @@ module Make(Element : Field) = struct
     type elt = Element.t
 
     type t = Vector of elt array
-
-    let elt_zero = Element.zero
-
-    let elt_one = Element.one
 
     (* Monad Operations*)
 

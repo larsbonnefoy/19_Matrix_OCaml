@@ -24,10 +24,6 @@ module type S = sig
     (** Is of type Vector 'a or Empty*)
     type t
 
-    val elt_zero : elt
-
-    val elt_one : elt
-
     (** [make s v] creates a new vector of size s filled with value v
         @raise Invalid_argument if s < 0 or s > Sys.max_array_length *)
     val make : int -> elt -> t
@@ -44,6 +40,10 @@ module type S = sig
     val display : t -> unit
 
     val equal: t -> t -> bool
+
+    (**[get v pos] is element at index i in v
+    @raises Invalid_argument if n is outside the range 0 to (length a - 1). *)
+    val get: t -> int -> elt
 
     val set : t -> int -> elt -> unit
 

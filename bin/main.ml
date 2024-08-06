@@ -36,14 +36,30 @@ let () = print_newline ()
 let () = FloatMatrix.display u 
 
 let m_row_e = FloatMatrix.of_array [| 
-    [|8.; 5.; ~-.2.; 4.; 28.|];
-    [|4.; 2.5; 20.; 0.; ~-.4. |];
+    [|8.; 5.; -.2.; 4.; 28.|];
+    [|4.; 2.5; 20.; 0.; -.4. |];
     [|8.; 5.; 1.; 4.; 17. |];
 |]
 
-let (l, u) = (FloatMatrix.lu_decompo m_row_e)
+let () = FloatMatrix.display m_row_e
+let () = print_newline ()
+let () = (FloatMatrix.switch_row 0 1 m_row_e) ; m_row_e |> FloatMatrix.display
 
+(* let (l, u) = (FloatMatrix.lu_decompo m_row_e) *)
+(**)
+(* let () = print_newline () *)
+(* let () = FloatMatrix.display u  *)
+(* let () = print_newline () *)
+(* let () = FloatMatrix.display l  *)
+(* let () = print_newline () *)
+
+let m_row_e = FloatMatrix.of_array [| 
+    [|2.; 0.; 2.; 0.6|];
+    [|3.; 3.; 4.; -2.|];
+    [|5.; 5.; 4.; 2.|];
+    [|-1.; -2.; 3.4; -2.|];
+|]
+
+let () = FloatMatrix.lup_decompo m_row_e
 let () = print_newline ()
-let () = FloatMatrix.display u 
-let () = print_newline ()
-let () = FloatMatrix.display l 
+let () = FloatMatrix.display m_row_e

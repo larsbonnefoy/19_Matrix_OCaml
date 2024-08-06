@@ -18,6 +18,8 @@ module type S = sig
 
     val id : int -> int -> t
 
+    val switch_row: int -> int -> t -> unit
+
     val to_string: t -> string
     val display : t -> unit
     val add : t -> t -> t
@@ -31,6 +33,7 @@ module type S = sig
     val mul_vec : t -> v -> v
     val mul_vec_ip : t -> v -> unit
     val lu_decompo : t -> t * t
+    val lup_decompo : t -> unit
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end
@@ -45,6 +48,8 @@ module type EltOp = sig
     val mul : t -> t -> t
     val div : t -> t -> t
     val to_string : t -> string
+    val abs : t -> t
+    val fma : t -> t -> t -> t
 end
 
 module Make (Vector : Vector.S) (Element : EltOp with type t = Vector.elt) : S with type elt = Element.t and type v = Vector.t

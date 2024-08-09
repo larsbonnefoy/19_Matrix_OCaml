@@ -23,6 +23,7 @@ module type S = sig
     val mul_vec_ip : t -> v -> unit
     val lu_decompo : t -> t * t
     val lup_decompo : t -> unit
+    val trace : t -> elt
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end
@@ -128,6 +129,17 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             for y = st to fn do                                 (*loop over rows*)
                 Vector.get repr.(y) i |> f y
             done;
+        end
+
+    (** [fold_diag f acc m] is the fold left on m applying f to its diagonal elements *)
+    let fold_diag f acc = function 
+        | Matrix { size = (r, c) ; repr} -> begin
+            let acc_ref = ref acc in
+            for i = 0 to (Int.min r c) - 1 do 
+                let elt = Vector.get repr.(i) i in 
+                acc_ref := f !acc_ref elt
+            done;
+            !acc_ref
         end
 
 
@@ -292,6 +304,9 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                 done;
             done;
         end
+
+    (** Returns the trace of matrix m which is the sum of its diagonal elements*)
+    let trace = fold_diag (fun acc elt -> Element.add acc elt) Element.zero
 
     let of_vector_array (a : v array) = 
         let nb_rows = Array.length a in 

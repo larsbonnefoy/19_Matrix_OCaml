@@ -66,3 +66,21 @@ let () = FloatMatrix.display m_row_e
 let () = FloatMatrix.lup_decompo m_row_e
 let () = print_newline ()
 let () = FloatMatrix.display m_row_e
+
+
+let det = FloatMatrix.of_array [| 
+    [|8.; 5.; -2.; 4.|];
+    [|4.; 2.5; 20.; 4.|];
+    [|8.; 5.; 1.; 4.|];
+    [|28.; -4.; 17.; -1.|];
+|]
+let () = FloatMatrix.lup_decompo det
+let () = FloatMatrix.display det
+
+let tr = FloatMatrix.of_array [| 
+    [|8.; 5.; -2.|];
+    [|4.; 2.5; 20.|];
+    [|8.; 5.; 1.|];
+    [|28.; -4.; 17.|];
+|]
+let () = print_float (FloatMatrix.trace tr)

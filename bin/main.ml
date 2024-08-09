@@ -57,9 +57,12 @@ let m_row_e = FloatMatrix.of_array [|
     [|2.; 0.; 2.; 0.6|];
     [|3.; 3.; 4.; -2.|];
     [|5.; 5.; 4.; 2.|];
-    [|-1.; -2.; 3.4; -2.|];
+    [|-1.; -2.; 3.4; -1.|];
 |]
 
+
+let () = print_newline ()
+let () = FloatMatrix.display m_row_e
 let () = FloatMatrix.lup_decompo m_row_e
 let () = print_newline ()
 let () = FloatMatrix.display m_row_e

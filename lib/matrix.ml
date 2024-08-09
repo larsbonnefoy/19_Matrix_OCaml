@@ -264,7 +264,10 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                 (*Find where the max element in column K*)
                 let max = ref Element.zero in
                 let max_row = ref 0 in 
-                let find_max = (fun i elt -> if Element.abs elt > !max then (max := elt; max_row := i)) in
+                let find_max i elt = 
+                    let elt_abs = Element.abs elt in 
+                    if (elt_abs) > !max then (max := elt_abs; max_row := i) 
+                in
                 iteri_col find_max k ~start:k ~finish:(r - 1) m;        (*We always start at diagonal element, this is why we want column k, and start at element k*)
                 if !max = Element.zero then raise (Failure "lup decompo: Singular matrix");
                 (*Switch current row with max element row*)
@@ -278,13 +281,15 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                     get m i k 
                     |> (fun e -> Element.div e pivot) 
                     |> set m i k;
+                    (* Schur compl for n - 1 matrix *)
                     let schur_f j elt = 
                         let top = get m i k in 
                         let left = get m k j in 
-                        Element.fma (Element.neg top) left elt
+                        Element.fma (Element.neg top) left elt;
+
                     in
                     mapi_row schur_f i ~start:(k + 1) ~finish:(c - 1) ~matrix:m
-                done
+                done;
             done;
         end
 

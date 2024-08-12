@@ -24,6 +24,7 @@ module type S = sig
     val lu_decompo : t -> t * t
     val lup_decompo : t -> unit
     val trace : t -> elt
+    val transpose : t -> t
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end
@@ -181,7 +182,6 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             Vector.get v c
         end
 
-
     (**[switch_row_range r1 r2 start finish m] values in rows r1 and r2 in m between [[start; finish]]*)
     let switch_row_range r1 r2 s f = function 
         | Matrix {size = (row, _); _ } when r1 < 0 || r1 > row - 1 -> raise (Invalid_argument "switch_row: r1 out of bounds")
@@ -305,9 +305,20 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             done;
         end
 
-
     (** Returns the trace of matrix m which is the sum of its diagonal elements*)
     let trace = fold_diag (fun acc elt -> Element.add acc elt) Element.zero
+
+    let transpose = function 
+        | Matrix {size=(r, c); _} as m -> begin 
+            let new_m = make c r Element.zero in
+            for col = 0 to c - 1 do                               (*loop over every col*)
+                let func row elt = Printf.printf "%s" (Element.to_string (get m row col)); set new_m col row elt in        (* ith col becomes ith row *)
+                iteri_col func col ~start:0 ~finish:(r - 1) m;
+            done;
+        new_m
+        end
+
+    (* let transpose_ip m = fu *)
 
     let of_vector_array (a : v array) = 
         let nb_rows = Array.length a in 

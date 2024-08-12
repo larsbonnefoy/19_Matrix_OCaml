@@ -35,6 +35,7 @@ module type S = sig
     val lu_decompo : t -> t * t
     val lup_decompo : t -> unit
     val trace : t -> elt
+    val transpose : t -> t
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end

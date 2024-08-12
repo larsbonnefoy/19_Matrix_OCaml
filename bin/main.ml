@@ -33,6 +33,15 @@ let v = FloatVector.of_array [| -2.; -5.; 16.|]
 let z = FloatVector.cross_product u v
 let () = FloatVector.display z
 
+let transpose_m = FloatMatrix.of_array [| 
+    [|2.; 3.; 1.|];
+    [|6.; 13.; 5.|];
+    [|2.; 19.; 10.|];
+|]
+
+let () = FloatMatrix.display transpose_m
+let () = FloatMatrix.display (FloatMatrix.transpose transpose_m)
+
 let () = print_newline () 
 
 let m_test = FloatMatrix.of_array [| 

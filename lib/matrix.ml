@@ -305,6 +305,7 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             done;
         end
 
+
     (** Returns the trace of matrix m which is the sum of its diagonal elements*)
     let trace = fold_diag (fun acc elt -> Element.add acc elt) Element.zero
 

@@ -43,6 +43,7 @@ module type S = sig
     val norm : t -> float
     val norm_inf : t -> elt
     val cos : t -> t -> float
+    val cross_product : t -> t -> t
     val to_string : t -> string
     val of_array : elt array -> t
     val of_list : elt list -> t
@@ -222,6 +223,22 @@ module Make(Element : Field) = struct
                 let denom = (norm v1) *. (norm v2) in 
                 (Element.to_float num) /. denom
             end
+
+     (*           | i  j  k  | *)
+     (*   a x b = | a1 a2 a3 | *)
+     (*           | b1 b2 b3 | *)
+     (*  *)
+     (*   a x b = (a2b3 - a3b2)i - (a1b3 - a3b1)j + (a1b2 - a2b1)k *)
+     (*    *)
+     (*   | s1 |   | a2b3 - a3b2 | *)
+     (*   | s2 | = | a3b1 - a1b3 | *)
+     (*   | s3 |   | a1b2 - a2b1 | *)
+    let cross_product v1 v2 = 
+            let x = Element.mul (get v1 1) (get v2 2) - Element.mul (get v1 2) (get v2 1) in 
+            let y = Element.mul (get v1 2) (get v2 0) - Element.mul (get v1 0) (get v2 2) in 
+            let z = Element.mul (get v1 0) (get v2 1) - Element.mul (get v1 1) (get v2 0) in 
+        return [|x; y; z|]
+
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
     let of_array (arr : elt array) = 

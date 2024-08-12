@@ -18,6 +18,21 @@ let () = Printexc.record_backtrace true
 (* let () = FloatMatrix.display u2 *)
 (* let () = FloatVector.display v2 *)
 
+let u = FloatVector.of_array [| 0.; 0.; 1.|]
+let v = FloatVector.of_array [| 1.; 0.; 0.|]
+let z = FloatVector.cross_product u v
+let () = FloatVector.display z
+
+let u = FloatVector.of_array [| 1.; 2.; 3.|]
+let v = FloatVector.of_array [| 4.; 5.; 6.|]
+let z = FloatVector.cross_product u v
+let () = FloatVector.display z
+
+let u = FloatVector.of_array [| 4.; 2.; -3.|]
+let v = FloatVector.of_array [| -2.; -5.; 16.|]
+let z = FloatVector.cross_product u v
+let () = FloatVector.display z
+
 let () = print_newline () 
 
 let m_test = FloatMatrix.of_array [| 

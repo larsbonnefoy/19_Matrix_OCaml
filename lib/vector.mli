@@ -97,6 +97,8 @@ module type S = sig
 
     val cos : t -> t -> float
 
+    val cross_product : t -> t -> t
+
     val to_string : t -> string
 
     (** [of_array arr] is the Vector containing the same elements as arr*)

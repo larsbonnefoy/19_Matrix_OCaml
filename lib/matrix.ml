@@ -145,7 +145,13 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
 
 
     (* [make r c v] is a matrix with r rows and c columns with filled with value v*)
-    let make r c v = Matrix({size=(r, c); repr = Array.make r (Vector.make c v)})
+    let make r c v = 
+        let gen_vector = fun _ -> Vector.make c v in
+        let array2d = Array.make r (Vector.make c Element.zero) in
+        for i = 0 to r - 1 do 
+            array2d.(i) <- gen_vector ()
+        done;
+        Matrix({size=(r, c); repr = array2d}) 
 
     (** [init r c f] initalises a new matrix where element a at row r and column c if the result of f r c *)
     let init (r : int) (c : int) (f : int -> int -> elt) = 
@@ -312,13 +318,11 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
         | Matrix {size=(r, c); _} as m -> begin 
             let new_m = make c r Element.zero in
             for col = 0 to c - 1 do                               (*loop over every col*)
-                let func row elt = Printf.printf "%s" (Element.to_string (get m row col)); set new_m col row elt in        (* ith col becomes ith row *)
+                let func row elt = set new_m col row elt in        (* ith col becomes ith row *)
                 iteri_col func col ~start:0 ~finish:(r - 1) m;
             done;
         new_m
         end
-
-    (* let transpose_ip m = fu *)
 
     let of_vector_array (a : v array) = 
         let nb_rows = Array.length a in 

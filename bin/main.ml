@@ -40,6 +40,7 @@ let transpose_m = FloatMatrix.of_array [|
 |]
 
 let () = FloatMatrix.display transpose_m
+let () = print_newline () 
 let () = FloatMatrix.display (FloatMatrix.transpose transpose_m)
 
 let () = print_newline () 

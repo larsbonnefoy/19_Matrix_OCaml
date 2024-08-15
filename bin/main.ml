@@ -45,6 +45,24 @@ let () = FloatMatrix.display (FloatMatrix.transpose transpose_m)
 
 let () = print_newline () 
 
+let () = FloatMatrix.transpose_ip transpose_m 
+let () = FloatMatrix.display transpose_m
+
+let transpose_m = FloatMatrix.of_array [| 
+    [|2.; 3.|];
+    [|6.; 13.|];
+    [|2.; 19.|];
+|]
+
+let () = FloatMatrix.display transpose_m
+let () = print_newline () 
+let () = FloatMatrix.display (FloatMatrix.transpose transpose_m)
+
+let () = print_newline () 
+
+let () = FloatMatrix.transpose_ip transpose_m 
+let () = FloatMatrix.display transpose_m
+
 let m_test = FloatMatrix.of_array [| 
     [|2.; 3.; 1.; 5.|];
     [|6.; 13.; 5.; 19.|];
@@ -109,3 +127,20 @@ let tr = FloatMatrix.of_array [|
     [|28.; -4.; 17.|];
 |]
 let () = print_float (FloatMatrix.trace tr)
+
+let mul1 = FloatMatrix.of_array [| 
+    [|1.; 2.; 3.|];
+    [|4.; 5.; 6.|];
+|]
+
+let mul2 = FloatMatrix.of_array [| 
+    [|7.; 8.|];
+    [|9.; 10.|];
+    [|11.; 12. |];
+|]
+
+let () = print_newline ()
+let () = FloatMatrix.display mul1
+let () = FloatMatrix.display mul2
+
+let () = FloatMatrix.mul_mat mul1 mul2

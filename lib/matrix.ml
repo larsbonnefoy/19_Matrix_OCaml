@@ -21,10 +21,12 @@ module type S = sig
     val lerp_ip : t -> t -> elt -> unit
     val mul_vec : t -> v -> v
     val mul_vec_ip : t -> v -> unit
+    val mul_mat : t -> t -> unit
     val lu_decompo : t -> t * t
     val lup_decompo : t -> unit
     val trace : t -> elt
     val transpose : t -> t
+    val transpose_ip : t -> unit
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end
@@ -124,13 +126,37 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
     (*         done *)
     (*     end *)
         
-    (** [iteri_col f i start finish m] iterates over column [i] of matrix [m] by applying [f] to index of row first and then to element at index between [[start; finish]]. !! Validity of start and finish not checked*)
+    (** [iteri_col f i start finish m] iterates over column [i] of matrix [m] by applying [f] to index of row first and then to element at index between [[start; finish]]. !! Validity of start and finish not checked, nor is column index*)
     let iteri_col f i ~start:st ~finish:fn = function 
         | Matrix { size = (_, _) ; repr} -> begin
             for y = st to fn do                                 (*loop over rows*)
                 Vector.get repr.(y) i |> f y
             done;
         end
+            
+    (* let iter_col f i = function  *)
+    (*     | Matrix { size = (r, _) ; _} as m -> begin *)
+    (*     let remove_index_func = fun index arg -> ignore index; f arg in *)
+    (*     iteri_col remove_index_func i ~start:0 ~finish:(r - 1) m *)
+    (* end  *)
+
+    (** [iteri_row f i start finish m] iterates over row [i] of matrix [m] by applying [f] to index of row first and then to element at index between [[start; finish]]. !! Validity of start and finish not checked, nor is row index*)
+    let iteri_row f i ~start:st ~finish:fn = function 
+        | Matrix { size = (_, _) ; repr} -> begin
+            let row = repr.(i) in
+            for y = st to fn do                                 (*loop over cols*)
+                Vector.get row y |> f y                         (*could be made clearner with iter of vec directly but needs to be impl in vec class*)
+            done;
+        end
+
+    (** [iter_row f i m] applies function [f] to every element of row [i] of matrix m*)
+    (* let iter_row f i = function  *)
+    (*     | Matrix { size = (_, c) ; _} as m -> begin *)
+    (*     let remove_index_func = fun index arg -> ignore index; f arg in *)
+    (*     iteri_row remove_index_func i ~start:0 ~finish:(c - 1) m *)
+    (* end  *)
+
+    
 
     (** [fold_diag f acc m] is the fold left on m applying f to its diagonal elements *)
     let fold_diag f acc = function 
@@ -143,13 +169,11 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             !acc_ref
         end
 
-
     (* [make r c v] is a matrix with r rows and c columns with filled with value v*)
     let make r c v = 
-        let gen_vector = fun _ -> Vector.make c v in
         let array2d = Array.make r (Vector.make c Element.zero) in
         for i = 0 to r - 1 do 
-            array2d.(i) <- gen_vector ()
+            array2d.(i) <- Vector.make c v
         done;
         Matrix({size=(r, c); repr = array2d}) 
 
@@ -251,6 +275,25 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             done
         end
 
+    let mul_mat m1 m2 = 
+        match (size m1, size m2) with 
+        | ( (r1, c1), (r2, c2) ) when c1 <> r2 ->
+                raise (Invalid_argument (Printf.sprintf "mul_mat: invalid dimensions %dx%d cannot be multipled with %dx%d" r1 c1 r2 c2));
+        | ( (r1, c1), (_, c2)) -> begin 
+            let new_m = make r1 c2 Element.zero in 
+            for i = 0 to r1 - 1 do
+                let row_mul index elt = 
+                    for j = 0 to c2 - 1 do
+                        Printf.printf "(m1) %s x %s (m2)\n" (Element.to_string elt) (Element.to_string (get m2 index j)) 
+                        (* get m2 index j |> Element.mul elt |> Element.to_string |>Printf.printf "%s\n" *)
+                    done;
+                in
+                iteri_row row_mul i ~start:0 ~finish:(c1 - 1) m1;
+            done; 
+            ignore new_m;
+        end
+ 
+
     let lu_decompo = function 
         | Matrix {size=(rows, cols); _} as a -> begin
             if not (is_square a) then raise (Invalid_argument "lup: m is not square");
@@ -318,11 +361,21 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
         | Matrix {size=(r, c); _} as m -> begin 
             let new_m = make c r Element.zero in
             for col = 0 to c - 1 do                               (*loop over every col*)
-                let func row elt = set new_m col row elt in        (* ith col becomes ith row *)
-                iteri_col func col ~start:0 ~finish:(r - 1) m;
+                let set_elt row elt = set new_m col row elt in        (* ith col becomes ith row *)
+                iteri_col set_elt col ~start:0 ~finish:(r - 1) m;
             done;
         new_m
         end
+
+    let transpose_ip = function
+        | Matrix {size=_; repr = repr_og} as m -> begin
+        match transpose m with 
+        | Matrix {size=(r, _); repr= repr_transposed} -> begin 
+            for i = 0 to r - 1 do 
+                repr_og.(i) <- repr_transposed.(i)
+            done
+            end
+        end 
 
     let of_vector_array (a : v array) = 
         let nb_rows = Array.length a in 

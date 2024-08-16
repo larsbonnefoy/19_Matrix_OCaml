@@ -21,7 +21,8 @@ module type S = sig
     val lerp_ip : t -> t -> elt -> unit
     val mul_vec : t -> v -> v
     val mul_vec_ip : t -> v -> unit
-    val mul_mat : t -> t -> unit
+    val mul_mat : t -> t -> t
+    val mul_mat_ip : t -> t -> unit
     val lu_decompo : t -> t * t
     val lup_decompo : t -> unit
     val trace : t -> elt
@@ -61,6 +62,7 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
 
     let ( >>= ) = bind
 
+    (** [size m] is a tuple (row, col) representing the number of rows and cols of the matrix m*)
     let size = function
         | Matrix {size; _} -> size
 
@@ -155,8 +157,6 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
     (*     let remove_index_func = fun index arg -> ignore index; f arg in *)
     (*     iteri_row remove_index_func i ~start:0 ~finish:(c - 1) m *)
     (* end  *)
-
-    
 
     (** [fold_diag f acc m] is the fold left on m applying f to its diagonal elements *)
     let fold_diag f acc = function 
@@ -275,22 +275,38 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             done
         end
 
+    (* Unreadable impl but works *)
     let mul_mat m1 m2 = 
         match (size m1, size m2) with 
         | ( (r1, c1), (r2, c2) ) when c1 <> r2 ->
                 raise (Invalid_argument (Printf.sprintf "mul_mat: invalid dimensions %dx%d cannot be multipled with %dx%d" r1 c1 r2 c2));
         | ( (r1, c1), (_, c2)) -> begin 
             let new_m = make r1 c2 Element.zero in 
-            for i = 0 to r1 - 1 do
-                let row_mul index elt = 
-                    for j = 0 to c2 - 1 do
-                        Printf.printf "(m1) %s x %s (m2)\n" (Element.to_string elt) (Element.to_string (get m2 index j)) 
-                        (* get m2 index j |> Element.mul elt |> Element.to_string |>Printf.printf "%s\n" *)
-                    done;
-                in
-                iteri_row row_mul i ~start:0 ~finish:(c1 - 1) m1;
-            done; 
-            ignore new_m;
+            for i = 0 to r1 - 1 do                  (*loop over each row of m1*)
+                for j = 0 to c2 - 1 do              (*loop over each col of m2*)
+                    let row_col_mul index elt_m1 =  (*index of current elt being mult*)
+                        let acc = get new_m i j in  (*current value at position i j in new_m, used as accumulator*)
+                        let elt_m2 = get m2 index j in
+                        Element.fma elt_m1 elt_m2 acc
+                        |> set new_m i j   
+                    in
+                    iteri_row row_col_mul i ~start:0 ~finish:(c1 - 1) m1;
+                done;
+            done;
+            new_m
+        end
+
+    (* m1 and m2 must be square matrices of the same size *)
+    let mul_mat_ip m1 m2 = 
+        if not ((is_square m1) && (is_square m2)) then raise (Invalid_argument "mul_mat_ip: matrix has to be square")
+        else match (mul_mat m1 m2) with
+        | Matrix {size=(r, _); repr=tmp_repr} -> begin
+            match m1 with 
+            | Matrix {size=_; repr=m1_repr} -> begin
+                for i = 0 to r - 1 do 
+                m1_repr.(i) <- tmp_repr.(i)
+                done;
+            end
         end
  
 

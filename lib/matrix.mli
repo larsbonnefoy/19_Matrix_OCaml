@@ -32,7 +32,8 @@ module type S = sig
     val lerp_ip : t -> t -> elt -> unit
     val mul_vec : t -> v -> v
     val mul_vec_ip : t -> v -> unit
-    val mul_mat : t -> t -> unit
+    val mul_mat : t -> t -> t
+    val mul_mat_ip : t -> t -> unit
     val lu_decompo : t -> t * t
     val lup_decompo : t -> unit
     val trace : t -> elt

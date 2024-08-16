@@ -143,4 +143,17 @@ let () = print_newline ()
 let () = FloatMatrix.display mul1
 let () = FloatMatrix.display mul2
 
-let () = FloatMatrix.mul_mat mul1 mul2
+let () = FloatMatrix.display (FloatMatrix.mul_mat mul1 mul2)
+
+let mul1 = FloatMatrix.of_array [| 
+    [|3.; -5.|];
+    [|6.; 8.|];
+|]
+
+let mul2 = FloatMatrix.of_array [| 
+    [|2.; 1.|];
+    [|4.; 2.|];
+|]
+
+let () = FloatMatrix.mul_mat_ip mul1 mul2
+let () = FloatMatrix.display mul1

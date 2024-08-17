@@ -63,12 +63,12 @@ let () = print_newline ()
 let () = FloatMatrix.transpose_ip transpose_m 
 let () = FloatMatrix.display transpose_m
 
-(* let m_test = FloatMatrix.of_array [|  *)
-(*     [|2.; 3.; 1.; 5.|]; *)
-(*     [|6.; 13.; 5.; 19.|]; *)
-(*     [|2.; 19.; 10.; 23.|]; *)
-(*     [|4.; 10.; 11.; 31.|]; *)
-(* |] *)
+let m_test = FloatMatrix.of_array [| 
+    [|2.; 3.; 1.; 5.|];
+    [|6.; 13.; 5.; 19.|];
+    [|2.; 19.; 10.; 23.|];
+    [|4.; 10.; 11.; 31.|];
+|]
 
 let m_row_e = FloatMatrix.of_array [| 
     [|8.; 5.; -.2.; 4.; 28.|];
@@ -150,30 +150,10 @@ let mul2 = FloatMatrix.of_array [|
 let () = FloatMatrix.mul_mat_ip mul1 mul2
 let () = FloatMatrix.display mul1
 
-let u = FloatMatrix.of_array [| 
-    [|1.; 2. |];
-    [|3.; 4. |]
-
-|]
-
-let () = FloatMatrix.row_echelon_form_ip u
-let () = FloatMatrix.display u
-
-let u = FloatMatrix.of_array [| 
-    [|1.; 2. |];
-    [|2.; 4. |]
-|]
-
-let () = FloatMatrix.row_echelon_form_ip u
-let () = FloatMatrix.display u
-
 
 let u = FloatMatrix.of_array [| 
     [|8.; 5.; -2.; 4.; 28.|];
-    [|4.; 2.5; 20.; 4.; -4.|];
-    [|8.; 5.; 1.; 4.; 17.|];
 
 |]
 
-let () = FloatMatrix.row_echelon_form_ip u
-let () = FloatMatrix.display u
+let () = FloatMatrix.row_echelon_form_ip mul2

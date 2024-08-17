@@ -50,6 +50,7 @@ module type S = sig
     val copy : t -> t
     val map : (elt -> elt) -> t -> t
     val map_ip : (elt -> elt) -> t -> unit
+    val map2: (elt -> elt -> elt) -> t -> t -> t
     val map2_ip : (elt -> elt -> elt) -> t -> t -> unit
 end
 

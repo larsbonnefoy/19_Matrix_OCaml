@@ -34,11 +34,11 @@ module type S = sig
     val mul_vec_ip : t -> v -> unit
     val mul_mat : t -> t -> t
     val mul_mat_ip : t -> t -> unit
-    val lu_decompo : t -> t * t
     val lup_decompo : t -> unit
     val trace : t -> elt
     val transpose : t -> t
     val transpose_ip : t -> unit
+    val row_echelon_form_ip: t -> unit
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end

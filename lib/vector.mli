@@ -113,6 +113,8 @@ module type S = sig
 
     val map_ip : (elt -> elt) -> t -> unit
 
+    val map2: (elt -> elt -> elt) -> t -> t -> t
+
     val map2_ip : (elt -> elt -> elt) -> t -> t -> unit
 end
 

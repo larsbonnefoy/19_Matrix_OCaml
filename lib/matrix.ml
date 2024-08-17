@@ -23,11 +23,11 @@ module type S = sig
     val mul_vec_ip : t -> v -> unit
     val mul_mat : t -> t -> t
     val mul_mat_ip : t -> t -> unit
-    val lu_decompo : t -> t * t
     val lup_decompo : t -> unit
     val trace : t -> elt
     val transpose : t -> t
     val transpose_ip : t -> unit
+    val row_echelon_form_ip: t -> unit
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end
@@ -308,29 +308,6 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                 done;
             end
         end
- 
-
-    let lu_decompo = function 
-        | Matrix {size=(rows, cols); _} as a -> begin
-            if not (is_square a) then raise (Invalid_argument "lup: m is not square");
-            let upper = init rows cols (fun r c -> if r <= c then Element.one else Element.zero) in
-            let lower = init rows cols (fun r c -> if r >= c then Element.one else Element.zero) in
-            for k = 0 to rows - 1 do
-                let pivot = get a k k in 
-                pivot |> set upper k k;
-                for i = k + 1 to rows - 1 do 
-                    get a i k |> fun x -> Element.div x pivot |> set lower i k;     (* l_ik = a_ik / a_kk where a_ik is v_i*)
-                    get a k i |> set upper k i;                                     (* u_ki = a_ki where a_ki is w_i*)
-                done;
-                for i = k + 1 to rows - 1 do                                        (* Compute the schur complt*)
-                    for j = k + 1 to rows - 1 do 
-                        let mult = Element.mul (get lower i k) (get upper k j) in 
-                        get a i j |> fun x -> Element.sub x mult |> set a i j; 
-                    done
-                done;
-            done;
-            (lower, upper)
-        end
 
     let lup_decompo = function 
         | Matrix {size=(r, c); _} as m -> begin 
@@ -392,6 +369,35 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             done
             end
         end 
+
+    let row_echelon_form_ip = function
+        | Matrix {size=(r, _); repr} as m -> begin
+            for i = 0 to r - 1 do 
+                (*Need to skip a column when pivot = 0 => curr_col != i*)
+                let rec find_pivot col_index = 
+                    try 
+                        match (get m i col_index) with
+                        | _ as pvt when pvt = Element.zero -> find_pivot (col_index + 1)
+                        | _ as pvt -> Some (pvt, col_index)
+                    with 
+                        | Invalid_argument _ -> None (*Case for a singular Matrix, ignore it atm*)
+                in
+                match find_pivot i with 
+                | Some (pivot, curr_col) -> begin 
+                    pivot 
+                    |> Element.div Element.one 
+                    |> Vector.scl_ip repr.(i);
+                    (*loop over all rows <> i to remove potential values*)
+                    for j = 0 to r - 1 do 
+                        if j <> i then begin
+                            let lead = get m j curr_col in 
+                            Vector.sub_ip repr.(j) (Vector.scl repr.(i) lead)
+                        end
+                    done;
+                end
+                | None -> ignore ()
+            done
+        end
 
     let of_vector_array (a : v array) = 
         let nb_rows = Array.length a in 

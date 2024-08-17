@@ -384,9 +384,9 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                 in
                 match find_pivot i with 
                 | Some (pivot, curr_col) -> begin 
-                    pivot 
-                    |> Element.div Element.one 
-                    |> Vector.scl_ip repr.(i);
+                    (* Scale by inverse of pvt *)
+                    let inverse v = Element.div Element.one v in
+                    Vector.scl_ip repr.(i) (inverse pivot);
                     (*loop over all rows <> i to remove potential values*)
                     for j = 0 to r - 1 do 
                         if j <> i then begin

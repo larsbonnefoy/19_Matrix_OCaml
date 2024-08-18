@@ -27,6 +27,7 @@ module type S = sig
     val trace : t -> elt
     val transpose : t -> t
     val transpose_ip : t -> unit
+    val row_echelon_form: t -> t
     val row_echelon_form_ip: t -> unit
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
@@ -384,7 +385,7 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                 in
                 match find_pivot i with 
                 | Some (pivot, curr_col) -> begin 
-                    (* Scale by inverse of pvt *)
+                    (* Scale row i by inverse of pvt *)
                     let inverse v = Element.div Element.one v in
                     Vector.scl_ip repr.(i) (inverse pivot);
                     (*loop over all rows <> i to remove potential values*)
@@ -397,6 +398,13 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                 end
                 | None -> ignore ()
             done
+        end
+
+    let row_echelon_form = function 
+        | Matrix {size=(r, c); _} as m -> begin
+            let copy_m = init r c (fun row col -> get m row col) in 
+            row_echelon_form_ip copy_m;
+            copy_m
         end
 
     let of_vector_array (a : v array) = 

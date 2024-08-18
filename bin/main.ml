@@ -177,3 +177,12 @@ let u = FloatMatrix.of_array [|
 
 let () = FloatMatrix.row_echelon_form_ip u
 let () = FloatMatrix.display u
+
+let u = FloatMatrix.of_array [| 
+    [|8.; 5.; -2.; 4.; 28.|];
+    [|4.; 2.5; 20.; 4.; -4.|];
+    [|8.; 5.; 1.; 4.; 17.|];
+
+|]
+
+let () = FloatMatrix.display (FloatMatrix.row_echelon_form u)

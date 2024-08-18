@@ -38,6 +38,7 @@ module type S = sig
     val trace : t -> elt
     val transpose : t -> t
     val transpose_ip : t -> unit
+    val row_echelon_form: t -> t
     val row_echelon_form_ip: t -> unit
     val of_vector_array : v array -> t
     val of_array : elt array array -> t

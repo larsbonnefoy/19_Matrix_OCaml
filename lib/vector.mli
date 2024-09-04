@@ -67,8 +67,11 @@ module type S = sig
 
     val scl_ip : t -> elt -> unit
 
+    (**[linear_comb a c] is lc, the linear combination of vectors from array a and scalars of c so that c1 * a1 + c2 * a2 = lc *)
     val linear_comb : t array -> elt array -> t
 
+    (**[linear_comb a c] is lc, the linear combination of vectors from array a and scalars of c so that [c1 * a1 + c2 * a2 = lc]. 
+       Uses fuse-add-multiply impl provided in Functor init*)
     val linear_comb_fma : t array -> elt array -> t
 
     (** [lerp_e p1 p2 t] is the point on the line between e1 e2 at t distance from e1
@@ -99,6 +102,8 @@ module type S = sig
 
     val cross_product : t -> t -> t
 
+    val cross_product_ip : t -> t -> unit
+
     val to_string : t -> string
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
@@ -116,6 +121,8 @@ module type S = sig
     val map2: (elt -> elt -> elt) -> t -> t -> t
 
     val map2_ip : (elt -> elt -> elt) -> t -> t -> unit
+
+    val fold_left: ('a -> elt -> 'a) -> 'a -> t -> 'a
 end
 
 (* module Make (Ord : OrderedType) : S with type key = Ord.t *)

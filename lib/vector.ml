@@ -44,6 +44,7 @@ module type S = sig
     val norm_inf : t -> elt
     val cos : t -> t -> float
     val cross_product : t -> t -> t
+    val cross_product_ip : t -> t -> unit
     val to_string : t -> string
     val of_array : elt array -> t
     val of_list : elt list -> t
@@ -52,6 +53,7 @@ module type S = sig
     val map_ip : (elt -> elt) -> t -> unit
     val map2: (elt -> elt -> elt) -> t -> t -> t
     val map2_ip : (elt -> elt -> elt) -> t -> t -> unit
+    val fold_left: ('a -> elt -> 'a) -> 'a -> t -> 'a
 end
 
 module Make(Element : Field) = struct
@@ -171,9 +173,9 @@ module Make(Element : Field) = struct
 
     let scl_ip v s = map_ip ( ( * ) s) v
 
-    let linear_comb (v : t array) (c : elt array) = 
-        let neutral_vector = make (length v.(0)) Element.zero in 
-        Array.map2 scl v c |> Array.fold_left add neutral_vector
+    let linear_comb (a : t array) (c : elt array) = 
+        let neutral_vector = make (length a.(0)) Element.zero in 
+        Array.map2 scl a c |> Array.fold_left add neutral_vector
 
     (** Will raise Index_out_of_bound if size does not match*)
     let linear_comb_fma (a : t array) (c : elt array) = 
@@ -199,8 +201,10 @@ module Make(Element : Field) = struct
 
     let lerp_ip v1 v2 t = map2_ip (fun e1 e2 -> lerp_p e1 e2 t) v1 v2
 
+    (**[dot v1 v2] is the dot product between v1 and v2*)
     let dot v1 v2 = map2 ( * ) v1 v2 |> fold_left ( + ) Element.zero
 
+    (**[dot_fma v1 v2] is the dot product between v1 and v2. Uses fuse add mult given in functor declaration*)
     let dot_fma v1 v2 = 
         let acc = ref Element.zero in 
         map2_acc fma v1 v2 acc;
@@ -235,11 +239,21 @@ module Make(Element : Field) = struct
      (*   | s2 | = | a3b1 - a1b3 | *)
      (*   | s3 |   | a1b2 - a2b1 | *)
     let cross_product v1 v2 = 
-            let x = Element.mul (get v1 1) (get v2 2) - Element.mul (get v1 2) (get v2 1) in 
-            let y = Element.mul (get v1 2) (get v2 0) - Element.mul (get v1 0) (get v2 2) in 
-            let z = Element.mul (get v1 0) (get v2 1) - Element.mul (get v1 1) (get v2 0) in 
-        return [|x; y; z|]
+            match (length v1, length v2) with 
+            | 3, 3 -> begin
+                    let x = Element.mul (get v1 1) (get v2 2) - Element.mul (get v1 2) (get v2 1) in 
+                    let y = Element.mul (get v1 2) (get v2 0) - Element.mul (get v1 0) (get v2 2) in 
+                    let z = Element.mul (get v1 0) (get v2 1) - Element.mul (get v1 1) (get v2 0) in 
+                    return [|x; y; z|]
+                end
+            | l1 , l2 -> raise (Invalid_argument (Printf.sprintf "cross_product: Invalid dimensions for vectors (v1: %d v2: %d)" l1 l2))
 
+    let cross_product_ip v1 v2 = 
+        let cross_tmp = cross_product v1 v2 in 
+        let ( - ) = Int.sub in 
+        for i = 0 to length v1 - 1 do 
+            set v1 i (get cross_tmp i)
+        done
 
     (** [of_array arr] is the Vector containing the same elements as arr*)
     let of_array (arr : elt array) = 

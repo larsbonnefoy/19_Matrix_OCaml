@@ -23,12 +23,15 @@ module type S = sig
     val mul_vec_ip : t -> v -> unit
     val mul_mat : t -> t -> t
     val mul_mat_ip : t -> t -> unit
-    val lup_decompo : t -> unit
+    val lup_decompo : t -> t * int array
+    val lup_decompo_ip : t -> int array
     val trace : t -> elt
     val transpose : t -> t
     val transpose_ip : t -> unit
     val row_echelon_form: t -> t
     val row_echelon_form_ip: t -> unit
+    val determinant: t -> elt
+    val rank: t -> int
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
 end
@@ -96,16 +99,6 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
         | Matrix {size=(row, _); _} when i < 0 || i > row - 1 -> raise (Invalid_argument "Row out of bounds");
         | Matrix {size = _; repr=_} as m -> m
 
-    (* (** [map_partial_row f i start finish m] applies f inplace to row i of matrix m between cols [[start; finish]] *) *)
-    (* let map_partial_row f i start finish m =  *)
-    (*     match (map_partial_check i start finish m) with *)
-    (*     | Matrix {size = _; repr} -> begin *)
-    (*         let v = repr.(i) in *)
-    (*         for j = start to finish do  *)
-    (*             Vector.get v j |> fun elt -> f elt |> Vector.set v j *)
-    (*         done *)
-    (*     end *)
-
     (** [mapi_row f i start finish m] applies f inplace to row [i] to index first and then to the element. Index is taken between [[start; finish]] *)
     let mapi_row f i ~start:s ~finish:fn ~matrix:m = 
         match (row_col_check i s fn m) with
@@ -116,18 +109,6 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             done
         end
 
-    (** [map_partial_col f i start finish m] applies f inplace to col i of matrix m between rows [start; end] .*)
-    (* let map_partial_col f i start finish = function  *)
-    (*     | Matrix {size=_; _} when start > finish-> raise (Invalid_argument "map_partial_col: start after finish"); *)
-    (*     | Matrix {size=(row, _); _} when start < 0 || start > row - 1 -> raise (Invalid_argument "map_partial_col: start out of bounds"); *)
-    (*     | Matrix {size=(row, _); _} when finish < 0 || finish > row - 1 -> raise (Invalid_argument "map_partial_col: finish out of bounds"); *)
-    (*     | Matrix {size=(_, col); _} when i < 0 || i > col - 1 -> raise (Invalid_argument "map_partial_col: col out of bounds"); *)
-    (*     | Matrix {size = _; repr} -> begin *)
-    (*         for j = start to finish do  *)
-    (*             let v = repr.(j) in *)
-    (*             Vector.get v i |> fun elt -> f elt |> Vector.set v i *)
-    (*         done *)
-    (*     end *)
         
     (** [iteri_col f i start finish m] iterates over column [i] of matrix [m] by applying [f] to index of row first and then to element at index between [[start; finish]]. !! Validity of start and finish not checked, nor is column index*)
     let iteri_col f i ~start:st ~finish:fn = function 
@@ -137,12 +118,6 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             done;
         end
             
-    (* let iter_col f i = function  *)
-    (*     | Matrix { size = (r, _) ; _} as m -> begin *)
-    (*     let remove_index_func = fun index arg -> ignore index; f arg in *)
-    (*     iteri_col remove_index_func i ~start:0 ~finish:(r - 1) m *)
-    (* end  *)
-
     (** [iteri_row f i start finish m] iterates over row [i] of matrix [m] by applying [f] to index of row first and then to element at index between [[start; finish]]. !! Validity of start and finish not checked, nor is row index*)
     let iteri_row f i ~start:st ~finish:fn = function 
         | Matrix { size = (_, _) ; repr} -> begin
@@ -151,13 +126,6 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                 Vector.get row y |> f y                         (*could be made clearner with iter of vec directly but needs to be impl in vec class*)
             done;
         end
-
-    (** [iter_row f i m] applies function [f] to every element of row [i] of matrix m*)
-    (* let iter_row f i = function  *)
-    (*     | Matrix { size = (_, c) ; _} as m -> begin *)
-    (*     let remove_index_func = fun index arg -> ignore index; f arg in *)
-    (*     iteri_row remove_index_func i ~start:0 ~finish:(c - 1) m *)
-    (* end  *)
 
     (** [fold_diag f acc m] is the fold left on m applying f to its diagonal elements *)
     let fold_diag f acc = function 
@@ -182,16 +150,6 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
     let init (r : int) (c : int) (f : int -> int -> elt) = 
         return (r, c) (Array.init r (fun r -> Vector.init c (f r)))
 
-    let is_empty = function
-        | Matrix {size = (0, _); _ } | Matrix { size = (_, 0); _} -> true
-        | Matrix {size = (_, _); _ }  -> false
-
-    let is_square = function
-        | Matrix {size = (r, c); _ } when r = c -> true 
-        | _ -> false
-
-    let id r c = init r c (fun r c -> if r = c then Element.one else Element.zero)
-
     let check_row_col m r c = 
         match m with
         | Matrix {size = (row, _); _} when r < 0 || r > row - 1 -> raise (Invalid_argument "row out of bounds" )
@@ -212,6 +170,20 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             let v = repr.(r) in
             Vector.get v c
         end
+
+    let copy = function 
+        | Matrix {size = (r, c); _ } as m -> init r c (fun row col -> get m row col)
+
+    let is_empty = function
+        | Matrix {size = (0, _); _ } | Matrix { size = (_, 0); _} -> true
+        | Matrix {size = (_, _); _ }  -> false
+
+    let is_square = function
+        | Matrix {size = (r, c); _ } when r = c -> true 
+        | _ -> false
+
+    let id r c = init r c (fun r c -> if r = c then Element.one else Element.zero)
+
 
     (**[switch_row_range r1 r2 start finish m] values in rows r1 and r2 in m between [[start; finish]]*)
     let switch_row_range r1 r2 s f = function 
@@ -310,10 +282,11 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             end
         end
 
-    let lup_decompo = function 
+    (** [lup_decompo_ip m] is the in place LUP decomposition of m. LU is written to m and expression evaluates to P the pivot matrix. P is an int array of length (row m) + 1 where value at entry gives position of "1" in permutation matrix *)
+    let lup_decompo_ip = function 
         | Matrix {size=(r, c); _} as m -> begin 
-            (*Permutation array where value y at index i means that the ith row has a 1 at column y*)
-            let p = Array.init r (fun x -> x) in 
+            (*Permutation array of size r + 1 where value y at index i means that the ith row has a 1 at column y. Last value is used to store the number of permutations*)
+            let p = Array.init (r + 1) (fun x -> if x <> r then x else 0) in 
             (*loop over all rows*)
             for k = 0 to r - 1 do
                 (*Find where the max element in column K*)
@@ -326,9 +299,11 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                 iteri_col find_max k ~start:k ~finish:(r - 1) m;        (*We always start at diagonal element, this is why we want column k, and start at element k*)
                 if !max = Element.zero then raise (Failure "lup decompo: Singular matrix");
                 (*Switch current row with max element row*)
-                let tmp = p.(k) in 
-                p.(k) <- !max_row; p.(!max_row) <- tmp;
-                switch_row k !max_row m;
+                if k <> !max_row then
+                    let tmp = p.(k) in 
+                    p.(k) <- p.(!max_row); p.(!max_row) <- tmp;
+                    switch_row k !max_row m;
+                    p.(r) <- p.(r) + 1 ;
                 (* Need to update Schurs compl, we loop over each row under the current row k *)
                 let pivot = get m k k in
                 for i = k + 1 to r - 1 do  
@@ -341,12 +316,22 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                         let top = get m i k in 
                         let left = get m k j in 
                         Element.fma (Element.neg top) left elt;
-
                     in
                     mapi_row schur_f i ~start:(k + 1) ~finish:(c - 1) ~matrix:m
                 done;
             done;
+            p
         end
+
+    (**[lup_decompo m] returns a tuple (LU, P) where LU is the LU decomposition and P the permutation matrix. 
+       Permutation matrix is of length l = (row m) where values up to [l - 1] are the position of 1s in the permutation matrix 
+       and the l th value is the number of permutation*)
+    let lup_decompo m = 
+        print_string "start m:\n"; display m;
+        let cpy_m = copy m in 
+        let p = lup_decompo_ip cpy_m in 
+        print_string "decompo:\n"; display cpy_m;
+        (cpy_m, p)
 
     (** Returns the trace of matrix m which is the sum of its diagonal elements*)
     let trace = fold_diag (fun acc elt -> Element.add acc elt) Element.zero
@@ -362,14 +347,15 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
         end
 
     let transpose_ip = function
-        | Matrix {size=_; repr = repr_og} as m -> begin
-        match transpose m with 
-        | Matrix {size=(r, _); repr= repr_transposed} -> begin 
-            for i = 0 to r - 1 do 
-                repr_og.(i) <- repr_transposed.(i)
-            done
-            end
+        | Matrix {size=_; repr = repr_og} as m when is_square m -> begin
+            match transpose m with 
+            | Matrix {size=(r, _); repr= repr_transposed} -> begin 
+                for i = 0 to r - 1 do 
+                    repr_og.(i) <- repr_transposed.(i)
+                    done
+                end
         end 
+        | _ -> raise (Invalid_argument "transpose_ip: matrix should be square to transpose in place")
 
     let row_echelon_form_ip = function
         | Matrix {size=(r, _); repr} as m -> begin
@@ -400,11 +386,37 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             done
         end
 
-    let row_echelon_form = function 
-        | Matrix {size=(r, c); _} as m -> begin
-            let copy_m = init r c (fun row col -> get m row col) in 
+    let row_echelon_form m =
+            let copy_m = copy m in 
             row_echelon_form_ip copy_m;
             copy_m
+
+    let determinant m = 
+        match (size m) with 
+        | (1, 1) -> get m 0 0
+        | (2, 2) -> begin 
+                let a = Element.mul (get m 0 0) (get m 1 1) in 
+                let b = Element.mul (get m 0 1) (get m 1 0) in
+                Element.sub a b
+            end 
+        | (r, c) when r = c -> begin
+                try 
+                    let (lu, p) = lup_decompo m in 
+                    display lu;
+                    let diag = fold_diag (fun acc elt -> Element.mul acc elt) Element.one lu in 
+                    if p.((Array.length p - 1)) mod 2 = 0 then diag else Element.neg diag
+                with
+                    | Failure _ -> Element.zero
+            end
+        | (_, _) -> raise (Invalid_argument "determinant: m is not a square matrix")
+
+    let rank m = 
+        let not_null r = Vector.fold_left (fun acc elt -> acc || (elt <> Element.zero)) false r in
+        let null_rows_cntr = ref 0 in
+        match (row_echelon_form m) with 
+        | Matrix{size = (rows, _); repr} -> begin 
+            Array.iter (fun r -> if (not (not_null r)) then incr null_rows_cntr) repr;
+            rows - !null_rows_cntr
         end
 
     let of_vector_array (a : v array) = 

@@ -33,6 +33,7 @@ module type S = sig
     val row_echelon_form_ip: t -> unit
     val determinant: t -> elt
     val inverse: t -> t
+    val inverse_ip: t -> unit
     val rank: t -> int
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
@@ -158,11 +159,22 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
         | Matrix {size = (_, col); _} when c < 0 || c > col - 1 -> raise (Invalid_argument "col out of bounds" )
         | Matrix {size = _; repr = _} as m -> m
 
+    (** [set m r c x] sets row r and column c of matrix m to x*)
     let set m r c x =
         match (check_row_col m r c) with
         | Matrix {size = _; repr} -> begin
             let v = repr.(r) in
             Vector.set v c x
+        end
+
+    (**[set_col m c v] sets column c of matrix m to vector v*)
+    let set_col m c v = 
+        match m with 
+        | Matrix {size = (r, _); _} when r <> Vector.length v -> raise (Invalid_argument (Printf.sprintf "Vector length %d does not match number of rows %d" (Vector.length v) r))
+        | Matrix {size = (r, _); _} -> begin 
+            for i = 0 to r - 1 do 
+                Vector.get v i |> set m i c 
+            done;
         end
 
     (** [get m r c] returns element at row r and c from matrix m*)
@@ -441,35 +453,21 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
             x
             end
 
-    let inverse = function
+    let inverse_ip = function
         | Matrix{size = (r, c); _} as m when r = c -> begin 
-            let inv = make r c Element.zero in
             let (lu, p) = lup_decompo m in 
-            display lu;
-            for j = 0 to r - 1 do 
-                for i = 0 to r - 1 do 
-                    (*Sets identity vectors from permutation matrix*)
-                    let v = if p.(i) = j then Element.one else Element.zero in 
-                    set inv i j v;
-                    display inv;
-                    (*Forward subsitution by solving Ly = Pb, Pb is identity vector *)
-                    for k = 0 to i do 
-                        let v1 = Element.mul (get lu i k) (get inv k j) in 
-                        set inv i j (Element.sub (get inv i j) v1)
-                    done;
-                done;
-
-                for i = r - 1 downto 0 do 
-                    for k = i + 1 to r - 1 do 
-                        let v1 = Element.mul (get lu i k) (get inv k j) in 
-                        set inv i j (Element.sub (get inv i j) v1)
-                    done;
-                    set inv i j (Element.div (get inv i j) (get lu i i))
-                done;
+            for j = 0 to c - 1 do 
+                let id = Vector.init r (fun i -> if i = j then Element.one else Element.zero) in
+                let solution = lup_solve lu p id in 
+                set_col m j solution
             done;
-            inv
             end
         | _ -> raise (Invalid_argument "inverse: matrix is not square")
+
+    let inverse m = 
+        let cpy = copy m in 
+        inverse_ip cpy;
+        cpy
 
     let rank m = 
         let not_null r = Vector.fold_left (fun acc elt -> acc || (elt <> Element.zero)) false r in

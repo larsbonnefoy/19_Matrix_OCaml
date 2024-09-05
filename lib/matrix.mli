@@ -44,6 +44,7 @@ module type S = sig
     val row_echelon_form_ip: t -> unit
     val determinant: t -> elt
     val inverse: t -> t
+    val inverse_ip: t -> unit
     val rank: t -> int
     val of_vector_array : v array -> t
     val of_array : elt array array -> t

@@ -3,7 +3,7 @@ open LinearAlgebra
 module FloatVector = Vector.Make(struct include Float let to_float (x : float) = x end)
 module FloatMatrix = Matrix.Make(FloatVector)(Float)
 
-let () = Printf.printf "%f\n" (FloatVector.lerp_p 0. 1. 1.)
+let () = Printf.printf "%f\n" (FloatVector.lerp_p 0. 1. 0.)
 let () = Printf.printf "%f\n" (FloatVector.lerp_p 0. 1. 1.)
 let () = Printf.printf "%f\n" (FloatVector.lerp_p 0. 1. 0.5)
 let () = Printf.printf "%f\n" (FloatVector.lerp_p 21. 42. 0.3)

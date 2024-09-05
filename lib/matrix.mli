@@ -36,6 +36,7 @@ module type S = sig
     val mul_mat_ip : t -> t -> unit
     val lup_decompo : t -> t * int array
     val lup_decompo_ip : t -> int array
+    val lup_solve: t -> int array -> v -> v
     val trace : t -> elt
     val transpose : t -> t
     val transpose_ip : t -> unit

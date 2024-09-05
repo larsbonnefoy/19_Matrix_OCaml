@@ -25,6 +25,7 @@ module type S = sig
     val mul_mat_ip : t -> t -> unit
     val lup_decompo : t -> t * int array
     val lup_decompo_ip : t -> int array
+    val lup_solve: t -> int array -> v -> v
     val trace : t -> elt
     val transpose : t -> t
     val transpose_ip : t -> unit
@@ -408,6 +409,37 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                     | Failure _ -> Element.zero
             end
         | (_, _) -> raise (Invalid_argument "determinant: m is not a square matrix")
+
+    (**Solves for x in [LUx = Pb] where LU and P are the matrix and the permutation array returned by lup decompo *)
+    let lup_solve lu p b = 
+        match lu with 
+        | Matrix{size = (r, _); _} -> begin 
+            let y = Vector.make r Element.zero in
+            (*Forward subsitut to solve Ly = Pb*)
+            for i = 0 to r - 1 do 
+                let b_perm = Vector.get b p.(i) in 
+                let acc_prev = ref Element.zero in  (*Accumulator to compute previously solved equations*)
+                for j = 0 to i do 
+                    let substit = Element.mul (get lu i j) (Vector.get y j) in
+                    acc_prev := Element.add !acc_prev substit
+                done;
+                Vector.set y i (Element.sub b_perm !acc_prev)
+            done;
+            (*Backward subsitut to solve Ux = y*)
+            let x = Vector.make r Element.zero in 
+            for i = r - 1 downto 0 do 
+                let acc_prev = ref Element.zero in 
+                for j = i + 1 to r - 1 do 
+                    let substit = Element.mul (get lu i j) (Vector.get x j) in
+                    acc_prev := (Element.add !acc_prev substit)
+                done;
+                let norm = get lu i i in 
+                let y_val = Vector.get y i in 
+                let div x y = Element.div y x in  (*flip div to make pipe cleaner*)
+                Element.sub y_val !acc_prev |> div norm |> Vector.set x i
+            done;
+            x
+            end
 
     let inverse = function
         | Matrix{size = (r, c); _} as m when r = c -> begin 

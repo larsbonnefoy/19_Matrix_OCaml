@@ -1,0 +1,4 @@
+(executable
+ (public_name ex12)
+ (name ex12)
+ (libraries LinearAlgebra))

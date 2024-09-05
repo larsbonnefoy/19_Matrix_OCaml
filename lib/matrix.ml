@@ -31,6 +31,7 @@ module type S = sig
     val row_echelon_form: t -> t
     val row_echelon_form_ip: t -> unit
     val determinant: t -> elt
+    val inverse: t -> t
     val rank: t -> int
     val of_vector_array : v array -> t
     val of_array : elt array array -> t
@@ -303,7 +304,8 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
                     let tmp = p.(k) in 
                     p.(k) <- p.(!max_row); p.(!max_row) <- tmp;
                     switch_row k !max_row m;
-                    p.(r) <- p.(r) + 1 ;
+                    p.(r) <- p.(r) + 1;
+                else ignore (); (*required to match the above if clause*)
                 (* Need to update Schurs compl, we loop over each row under the current row k *)
                 let pivot = get m k k in
                 for i = k + 1 to r - 1 do  
@@ -327,10 +329,8 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
        Permutation matrix is of length l = (row m) where values up to [l - 1] are the position of 1s in the permutation matrix 
        and the l th value is the number of permutation*)
     let lup_decompo m = 
-        print_string "start m:\n"; display m;
         let cpy_m = copy m in 
         let p = lup_decompo_ip cpy_m in 
-        print_string "decompo:\n"; display cpy_m;
         (cpy_m, p)
 
     (** Returns the trace of matrix m which is the sum of its diagonal elements*)
@@ -402,13 +402,42 @@ module Make(Vector : Vector.S) (Element : EltOp with type t = Vector.elt) = stru
         | (r, c) when r = c -> begin
                 try 
                     let (lu, p) = lup_decompo m in 
-                    display lu;
                     let diag = fold_diag (fun acc elt -> Element.mul acc elt) Element.one lu in 
                     if p.((Array.length p - 1)) mod 2 = 0 then diag else Element.neg diag
                 with
                     | Failure _ -> Element.zero
             end
         | (_, _) -> raise (Invalid_argument "determinant: m is not a square matrix")
+
+    let inverse = function
+        | Matrix{size = (r, c); _} as m when r = c -> begin 
+            let inv = make r c Element.zero in
+            let (lu, p) = lup_decompo m in 
+            display lu;
+            for j = 0 to r - 1 do 
+                for i = 0 to r - 1 do 
+                    (*Sets identity vectors from permutation matrix*)
+                    let v = if p.(i) = j then Element.one else Element.zero in 
+                    set inv i j v;
+                    display inv;
+                    (*Forward subsitution by solving Ly = Pb, Pb is identity vector *)
+                    for k = 0 to i do 
+                        let v1 = Element.mul (get lu i k) (get inv k j) in 
+                        set inv i j (Element.sub (get inv i j) v1)
+                    done;
+                done;
+
+                for i = r - 1 downto 0 do 
+                    for k = i + 1 to r - 1 do 
+                        let v1 = Element.mul (get lu i k) (get inv k j) in 
+                        set inv i j (Element.sub (get inv i j) v1)
+                    done;
+                    set inv i j (Element.div (get inv i j) (get lu i i))
+                done;
+            done;
+            inv
+            end
+        | _ -> raise (Invalid_argument "inverse: matrix is not square")
 
     let rank m = 
         let not_null r = Vector.fold_left (fun acc elt -> acc || (elt <> Element.zero)) false r in
